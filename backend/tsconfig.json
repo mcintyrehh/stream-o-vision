@@ -4,6 +4,6 @@
     "outDir": "dist",
     "lib": ["dom"]
   },
-  "include": ["src"],
+  "include": ["src", "scripts/frontend.ts"],
   "exclude": ["node_modules"]
 }

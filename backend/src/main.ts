@@ -2,6 +2,7 @@ import express from "express";
 const app = express();
 import fs from "fs";
 import { exec } from "child_process";
+import path from "path";
 
 // Spin up HLS proxy server to get around CORS/Origin, Referer HTTP request headers
 console.log("Starting HLS proxy server...");
@@ -10,7 +11,7 @@ exec("echo 'henry is cool'", (error, stdout, stderr) => {
 });
 exec("pwd", (error, stdout, stderr) => {
   console.log("henry");
-  console.log("iscool")
+  console.log("iscool");
   console.log(stdout);
 });
 
@@ -31,12 +32,16 @@ exec(
   },
 );
 
-// app.get("/", function (req, res) {
-//   res.sendFile(__dirname + "/index.html");
-// });
-
+app.get("/", function (req, res) {
+  console.log("dirname: ", __dirname);
+  const pathway = path.join(__dirname, "..", "..", "public", "index.html");
+  console.log("pathway: ", pathway);
+  res.sendFile(pathway);
+});
 // app.get("/earth-cam", function (req, res) {
 //   res.sendFile(__dirname + "/earth-cam.html");
 // });
+app.use(express.static("public"));
+app.use("/scripts", express.static(path.join(__dirname, "..", "scripts/")));
 
-// app.listen(3000);
+app.listen(3000);

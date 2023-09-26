@@ -80,10 +80,10 @@ const streams = [
 //@ts-ignore
 let hls: any;
 
-let currentChannelIndex = 3;
+let currentChannelIndex = 2;
 
 const proxyURLFromStreamIndex = (streamIndex: number) => {
-  const proxy_url = "http://127.0.0.1:8181";
+  const proxy_url = "http://127.0.0.1:8182";
   const referer_url = "https://www.earthcam.com/";
   const file_extension = ".m3u8";
 
@@ -94,8 +94,9 @@ const proxyURLFromStreamIndex = (streamIndex: number) => {
 
 const onChannelChange = (direction: "up" | "down") => {
   const channelDirection = direction === "up" ? 1 : -1;
+  // Adding streams.length makes sure wrap-around works for negative numbers
   currentChannelIndex =
-    (currentChannelIndex + channelDirection) % streams.length;
+    (currentChannelIndex + channelDirection + streams.length) % streams.length;
   createHLSVideoElement();
 };
 
@@ -109,7 +110,18 @@ const createHLSVideoElement = () => {
   }
   var wrapper = document.createElement("div");
   wrapper.className = "video-wrapper";
+  wrapper.style.display = "flex";
+  wrapper.style.flexWrap = "nowrap";
+  wrapper.style.flexDirection = "column";
+  wrapper.style.position = "relative";
+  wrapper.style.height = "100vh";
+  wrapper.style.width = "100vw";
+  wrapper.style.backgroundImage = "url('./scripts/static-tv-static.gif')";
+
   var video = document.createElement("video");
+  video.style.height = "100%";
+  video.style.width = "100%";
+
   wrapper.appendChild(video);
   // creating info divs below the video
   var videoInfo = document.createElement("div");
@@ -132,7 +144,7 @@ const createHLSVideoElement = () => {
   channelUp.innerHTML = "Channel Up";
   channelUp.onclick = () => onChannelChange("up");
   wrapper.appendChild(channelUp);
-  
+
   const body = document.getElementsByTagName("body")[0];
   body.appendChild(wrapper);
 

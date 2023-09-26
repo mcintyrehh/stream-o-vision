@@ -16,7 +16,7 @@ exec("pwd", (error, stdout, stderr) => {
 });
 
 exec(
-  './node_modules/@warren-bank/hls-proxy/hls-proxy/bin/hlsd.js --port "8181"',
+  './node_modules/@warren-bank/hls-proxy/hls-proxy/bin/hlsd.js --port "8182"',
   (error, stdout, stderr) => {
     if (error) {
       console.error(`node subprocess error.message: ${error.message}`);
@@ -44,4 +44,4 @@ app.get("/", function (req, res) {
 app.use(express.static("public"));
 app.use("/scripts", express.static(path.join(__dirname, "..", "scripts/")));
 
-app.listen(3000);
+app.listen(1337);

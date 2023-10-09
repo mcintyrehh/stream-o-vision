@@ -82,6 +82,15 @@ let hls: any;
 
 let currentChannelIndex = 2;
 
+const wrapper = document.getElementsByClassName("video-wrapper")[0] as HTMLDivElement;
+wrapper.style.display = "flex";
+wrapper.style.flexWrap = "nowrap";
+wrapper.style.flexDirection = "column";
+wrapper.style.position = "relative";
+wrapper.style.height = "100vh";
+wrapper.style.width = "100vw";
+wrapper.style.backgroundImage = "url('./scripts/static-tv-static.gif')";
+
 const proxyURLFromStreamIndex = (streamIndex: number) => {
   const proxy_url = "http://127.0.0.1:8182";
   const referer_url = "https://www.earthcam.com/";
@@ -110,13 +119,7 @@ const createHLSVideoElement = () => {
   }
   var wrapper = document.createElement("div");
   wrapper.className = "video-wrapper";
-  wrapper.style.display = "flex";
-  wrapper.style.flexWrap = "nowrap";
-  wrapper.style.flexDirection = "column";
-  wrapper.style.position = "relative";
-  wrapper.style.height = "100vh";
-  wrapper.style.width = "100vw";
-  wrapper.style.backgroundImage = "url('./scripts/static-tv-static.gif')";
+  
 
   var video = document.createElement("video");
   video.style.height = "100%";

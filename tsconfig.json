@@ -1,8 +1,9 @@
 {
   "extends": "@tsconfig/node-lts/tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist"
+    "outDir": "dist",
+    "lib": ["dom"]
   },
-  "include": ["src"],
-  "exclude": ["node_modules"],
+  "include": ["app/src", "app/scripts/frontend.ts"],
+  "exclude": ["node_modules"]
 }

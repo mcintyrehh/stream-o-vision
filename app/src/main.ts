@@ -2,7 +2,7 @@ import express from "express";
 const app = express();
 import fs from "fs";
 import { exec } from "child_process";
-import path from "path";
+import path = require('path');
 
 // Spin up HLS proxy server to get around CORS/Origin, Referer HTTP request headers
 console.log("Starting HLS proxy server...");
@@ -16,7 +16,7 @@ exec("pwd", (error, stdout, stderr) => {
 });
 
 exec(
-  './node_modules/@warren-bank/hls-proxy/hls-proxy/bin/hlsd.js --port "8182"',
+  `node ./node_modules/@warren-bank/hls-proxy/hls-proxy/bin/hlsd.js --port "8182"`,
   (error, stdout, stderr) => {
     if (error) {
       console.error(`node subprocess error.message: ${error.message}`);
@@ -34,7 +34,7 @@ exec(
 
 app.get("/", function (req, res) {
   console.log("dirname: ", __dirname);
-  const pathway = path.join(__dirname, "..", "..", "public", "index.html");
+  const pathway = path.join(__dirname, "..", "..", "app", "public", "index.html");
   console.log("pathway: ", pathway);
   res.sendFile(pathway);
 });

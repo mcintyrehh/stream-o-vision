@@ -89,7 +89,7 @@ wrapper.style.flexDirection = "column";
 wrapper.style.position = "relative";
 wrapper.style.height = "100vh";
 wrapper.style.width = "100vw";
-wrapper.style.backgroundImage = "url('./scripts/static-tv-static.gif')";
+wrapper.style.backgroundImage = "url('./static-tv-static.gif')";
 
 const proxyURLFromStreamIndex = (streamIndex: number) => {
   const proxy_url = "http://127.0.0.1:8182";

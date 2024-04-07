@@ -3,6 +3,29 @@ const app = express();
 import fs from "fs";
 import { exec } from "child_process";
 import path = require('path');
+import { SerialPort } from 'serialport';
+
+SerialPort.list().then(ports => {
+  console.log("Ports: ", ports);
+})
+
+const port = new SerialPort({
+  path: 'COM3',
+  baudRate: 115200,
+})
+
+// Open errors will be emitted as an error event
+port.on('error', function(err) {
+  console.log('Error: ', err.message)
+})
+
+port.on("open", (test) => {
+  console.log("serial port open: ", test)
+  port.on('data', (data) => {
+      const translated = data.toString()
+      console.log("serial port data: ", translated)
+  })
+})
 
 // Spin up HLS proxy server to get around CORS/Origin, Referer HTTP request headers
 console.log("Starting HLS proxy server...");

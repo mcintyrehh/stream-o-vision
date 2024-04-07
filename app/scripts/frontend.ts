@@ -89,7 +89,7 @@ wrapper.style.flexDirection = "column";
 wrapper.style.position = "relative";
 wrapper.style.height = "100vh";
 wrapper.style.width = "100vw";
-wrapper.style.backgroundImage = "url('./static-tv-static.gif')";
+wrapper.style.backgroundImage = "url('./scripts/static-tv-static.gif')";
 
 const proxyURLFromStreamIndex = (streamIndex: number) => {
   const proxy_url = "http://127.0.0.1:8182";
@@ -124,6 +124,7 @@ const createHLSVideoElement = () => {
   var video = document.createElement("video");
   video.style.height = "100%";
   video.style.width = "100%";
+  video.style.backgroundImage = "url('./scripts/static-tv-static.gif')"
 
   wrapper.appendChild(video);
   // creating info divs below the video

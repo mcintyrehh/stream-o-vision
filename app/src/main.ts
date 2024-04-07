@@ -1,16 +1,21 @@
 import express from "express";
 const app = express();
-import fs from "fs";
+import os from "os";
 import { exec } from "child_process";
 import path = require('path');
 import { SerialPort } from 'serialport';
+
+
+console.log("os.type(): ", os.type())
+
+const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyAMC0"
 
 SerialPort.list().then(ports => {
   console.log("Ports: ", ports);
 })
 
 const port = new SerialPort({
-  path: 'COM3',
+  path: portPath,
   baudRate: 115200,
 })
 

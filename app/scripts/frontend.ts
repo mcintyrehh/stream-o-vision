@@ -1,3 +1,20 @@
+// import {WebSocket} from 'ws';
+
+const socket = new WebSocket('ws://localhost:3000');
+socket.onopen = () => {
+  socket.send('Hello, its ya boy Henry');
+}
+
+socket.onmessage = (event) => handleWSMessage(event.data);
+
+const handleWSMessage = (data: string) => {
+  const [_, sensor, reading] = data.split(':');
+  switch (sensor) {
+    case 'channel':
+      setChannel(parseInt(reading)); 
+  }
+}
+
 //TODO set up webpack so I can import this from a const file
 const streams = [
   {
@@ -43,7 +60,7 @@ const streams = [
   },
   {
     streamUrl:
-      "http://videos3.earthcam.com/fecnetwork/hdtimes10.flv/playlist.m3u8",
+      "https://videos-3.earthcam.com/fecnetwork/485.flv/playlist.m3u8",
     url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsnorth_hd",
     name: "Times Square View (North)",
     channelNumber: 6,
@@ -89,7 +106,7 @@ wrapper.style.flexDirection = "column";
 wrapper.style.position = "relative";
 wrapper.style.height = "100vh";
 wrapper.style.width = "100vw";
-wrapper.style.backgroundImage = "url('./scripts/static-tv-static.gif')";
+wrapper.style.backgroundImage = "url('./static/static-tv-static.gif')";
 
 const proxyURLFromStreamIndex = (streamIndex: number) => {
   const proxy_url = "http://127.0.0.1:8182";
@@ -100,6 +117,11 @@ const proxyURLFromStreamIndex = (streamIndex: number) => {
     `${streams[streamIndex].streamUrl}|${referer_url}`,
   )}${file_extension}`;
 };
+
+const setChannel = (channel: number) => {
+  currentChannelIndex = channel;
+  createHLSVideoElement();
+}
 
 const onChannelChange = (direction: "up" | "down") => {
   const channelDirection = direction === "up" ? 1 : -1;
@@ -124,7 +146,7 @@ const createHLSVideoElement = () => {
   var video = document.createElement("video");
   video.style.height = "100%";
   video.style.width = "100%";
-  video.style.backgroundImage = "url('./scripts/static-tv-static.gif')"
+  video.style.backgroundImage = "url('./static/static-tv-static.gif')"
 
   wrapper.appendChild(video);
   // creating info divs below the video

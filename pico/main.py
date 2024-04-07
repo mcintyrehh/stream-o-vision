@@ -1,77 +1,67 @@
 import time
-from machine import ADC, Pin, Timer
 
-switch_pin  = 8  # GP8
-pot_pin     = 26 # GP26
-rot_enc_pin = 27 # GP27
-led_pin     = 25 # Onboard LED
+import board
+import analogio
+import digitalio
+import terminalio
 
-power_switch   = Pin(switch_pin, Pin.IN, Pin.PULL_UP) # Digital Switch
-potentiometer  = ADC(Pin(26))                         # Anolog Potentiometer
-rotary_encoder = ADC(Pin(27))                         # Analog 10 Step Rotary Encoder
-led            = Pin(led_pin, Pin.OUT)
+switch_pin = board.D10
+pot_pin = board.A3
+rot_enc_pin = board.A1
 
-print("[status:setup:starting]")
+# switch
+switch = digitalio.DigitalInOut(switch_pin)
+switch.direction = digitalio.Direction.INPUT
+switch.pull = digitalio.Pull.UP
 
-def get_volume(adc: ADC, volume_increments: int):
-    """"Read raw analog value from ADC object and return an percentage
+# potentiometer
+potentiometer = analogio.AnalogIn(pot_pin)
 
-    Parameters
-    ----------
-    values : ADC
-        Python iterable whose values are summed.
+# rotary encoder
+channel_encoder = analogio.AnalogIn(rot_enc_pin)
 
-    Returns
-    -------
-    sum : `float`
-        Sum of ``values``.
-    """
-    percentage = adc.read_u16() / 65536
-    percentage_in_increments = int(percentage * 100/volume_increments) * volume_increments / 100
-    
-    return round(percentage_in_increments, 2)
 
-timer = Timer()
-power = power_switch.value() == 1
+def get_voltage(pin):
+    voltage = (pin.value * 3.3) / 65536
+    return round(voltage / 3.3, 2)
 
-def power_toggle(timer):
-    global power
-    power = not power
 
-def debounce(pin):
-    timer.init(mode=Timer.ONE_SHOT, period=200, callback=power_toggle)
+def get_channel(pin):
+    return int((channel_encoder.value / 65536) * 10)
 
-power_switch.irq(handler=debounce, trigger=Pin.IRQ_FALLING)
 
-def get_channel(adc):
-    return int((adc.read_u16() / 65536) * 10)
-
-cached_switch  = power_switch.value() == 1
-cached_volume  = get_volume(potentiometer,3)
-cached_channel = get_channel(rotary_encoder)
-
+cached_switch = switch.value == True
+cached_volume = get_voltage(potentiometer)
+cached_channel = channel_encoder.value
 
 while True:
-    #switch
-    if cached_switch is not power:
-        cached_switch = power
-        if power:
-            print("[__sensor:Power:On]")
+
+    # switch
+    if cached_switch is not switch.value:
+        cached_switch = switch.value
+        if switch.value:
+            print("Power On")
         else:
-            print("[__sensor:Power:Off]")
+            print("Power Off")
 
-    #potentiometer
-    curr_volume = get_volume(potentiometer,3)
-    if cached_volume != curr_volume:
-        cached_volume = curr_volume;
-        print("[__sensor:Volume:{curr_volume}]")
+    # potentiometer
+    #curr_volume = get_voltage(potentiometer)
+    #if cached_volume is not curr_volume:
+    #    cached_volume = curr_volume
+    #    print("Volume: ", curr_volume)
 
-    #rotary encoder
-    curr_channel = get_channel(rotary_encoder)
+    # rotary encoder
+    curr_channel = get_channel(channel_encoder)
     if cached_channel is not curr_channel:
         cached_channel = curr_channel
-        print("[sensor:Potentiometer:{curr_channel}]")
-    
-    # toggle led to show its working
-    led.toggle()
+        # print("rotary_encoder.reference_voltage: ", rotary_encoder.reference_voltage)
+        print("sensor:channel:{}".format(curr_channel))
+
+    # Draw some label text
+    power_status = "Power On" if switch.value else "Power Off"  # overly long to see where it clips
+#    text_area = label.Label(terminalio.FONT, text=power_status, color=0xFFFFFF, x=8, y=8)
+#    splash.append(text_area)
+
     time.sleep(0.1)
+    pass
+

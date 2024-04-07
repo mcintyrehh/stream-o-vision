@@ -4,33 +4,45 @@ import os from "os";
 import { exec } from "child_process";
 import path = require('path');
 import { SerialPort } from 'serialport';
-
+import { WebSocketServer, WebSocket } from 'ws'
 
 console.log("os.type(): ", os.type())
 
-const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyAMC0"
+const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyACM0"
 
 SerialPort.list().then(ports => {
   console.log("Ports: ", ports);
 })
+// Open WebSocket for communication with frontend
+const wss = new WebSocketServer({port: 3000})
 
-const port = new SerialPort({
-  path: portPath,
-  baudRate: 115200,
-})
-
-// Open errors will be emitted as an error event
-port.on('error', function(err) {
-  console.log('Error: ', err.message)
-})
-
-port.on("open", (test) => {
-  console.log("serial port open: ", test)
-  port.on('data', (data) => {
-      const translated = data.toString()
-      console.log("serial port data: ", translated)
+wss.on('connection', (socket) => {
+  console.log("WebSocket Connected")
+  const port = new SerialPort({
+    path: portPath,
+    baudRate: 115200,
+  })
+  
+  // Open errors will be emitted as an error event
+  port.on('error', function(err) {
+    console.log('Error: ', err.message)
+  })
+  
+  port.on("open", () => {
+    console.log("Serial Port Open")
+    port.on('data', (data) => {
+      console.log("serial port data: ", data.toString())
+      socket.send(data.toString());
+    })
+  })
+  
+  socket.on('message', (message) => {
+    console.log("message: ", message.toString())
   })
 })
+// console.log("wssSocket: ", wssSocket);
+
+
 
 // Spin up HLS proxy server to get around CORS/Origin, Referer HTTP request headers
 console.log("Starting HLS proxy server...");
@@ -66,10 +78,9 @@ app.get("/", function (req, res) {
   console.log("pathway: ", pathway);
   res.sendFile(pathway);
 });
-// app.get("/earth-cam", function (req, res) {
-//   res.sendFile(__dirname + "/earth-cam.html");
-// });
+
 app.use(express.static("public"));
 app.use("/scripts", express.static(path.join(__dirname, "..", "scripts/")));
+app.use("/static", express.static(path.join(__dirname, "..", "static/")));
 
 app.listen(1337);

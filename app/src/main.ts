@@ -4,7 +4,7 @@ import os from "os";
 import { exec } from "child_process";
 import path = require('path');
 import { SerialPort } from 'serialport';
-import { WebSocketServer, WebSocket } from 'ws'
+import { WebSocketServer } from 'ws'
 
 console.log("os.type(): ", os.type())
 

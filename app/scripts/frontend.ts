@@ -8,10 +8,23 @@ socket.onopen = () => {
 socket.onmessage = (event) => handleWSMessage(event.data);
 
 const handleWSMessage = (data: string) => {
+  console.log("~henry - data: ", data)
   const [_, sensor, reading] = data.split(':');
   switch (sensor) {
     case 'channel':
-      setChannel(parseInt(reading)); 
+      console.log("~henry - channel: ", reading)
+      setChannel(parseInt(reading));
+      break; 
+    case 'volume':
+      console.log("~henry - volume: ", reading)
+      setVolume(parseInt(reading));
+      break; 
+    case 'mute':
+      console.log("~henry - muting")
+      setMuted();
+      break; 
+    default:
+      return;
   }
 }
 
@@ -96,8 +109,9 @@ const streams = [
 
 //@ts-ignore
 let hls: any;
-
+let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
+let muted = true;
 
 const wrapper = document.getElementsByClassName("video-wrapper")[0] as HTMLDivElement;
 wrapper.style.display = "flex";
@@ -121,6 +135,17 @@ const proxyURLFromStreamIndex = (streamIndex: number) => {
 const setChannel = (channel: number) => {
   currentChannelIndex = channel;
   createHLSVideoElement();
+}
+
+const setVolume = (volume: number) => {
+  console.log("volume: ", -1/volume)
+  _video.volume = -1/volume;
+}
+
+const setMuted = () => {
+  console.log("~henry - muting")
+  muted = !muted;
+  _video.muted = muted;
 }
 
 const onChannelChange = (direction: "up" | "down") => {
@@ -149,6 +174,10 @@ const createHLSVideoElement = () => {
   video.style.backgroundImage = "url('./static/static-tv-static.gif')"
 
   wrapper.appendChild(video);
+  // Global ref to video elem
+  _video = video;
+  // @ts-ignore
+  window._video = video;
   // creating info divs below the video
   var videoInfo = document.createElement("div");
   var channelNumber = document.createElement("span");

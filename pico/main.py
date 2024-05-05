@@ -1,13 +1,10 @@
 import time
-
 import board
 import analogio
 import digitalio
-import terminalio
 import rotaryio
 
 switch_pin = board.D13
-pot_pin = board.A3
 rot_enc_pin = board.A1
 vol_button_pin = board.D11
 vol_enc_a_pin = board.D9
@@ -22,9 +19,6 @@ switch.pull = digitalio.Pull.UP
 vol_button = digitalio.DigitalInOut(vol_button_pin)
 vol_button.direction = digitalio.Direction.INPUT
 vol_button.pull = digitalio.Pull.UP
-
-# potentiometer
-potentiometer = analogio.AnalogIn(pot_pin)
 
 # rotary encoder
 rotary_encoder = analogio.AnalogIn(rot_enc_pin)
@@ -43,7 +37,6 @@ def get_channel(pin):
 
 cached_switch = switch.value == True
 cached_vol_button = vol_button.value
-cached_volume = get_voltage(potentiometer)
 cached_channel = rotary_encoder.value
 cached_vol_enc = vol_encoder.position
 
@@ -63,8 +56,9 @@ while True:
     # volume encoder
     curr_volume = vol_encoder.position
     if cached_volume is not curr_volume:
+        vol_direction = "up" if curr_volume > cached_volume else "down"
         cached_volume = curr_volume
-        print("sensor:volume:{}".format(curr_volume))
+        print("sensor:volume:{}".format(vol_direction))
 
     # rotary encoder
     curr_channel = get_channel(rotary_encoder)
@@ -73,19 +67,6 @@ while True:
         # print("rotary_encoder.reference_voltage: ", rotary_encoder.reference_voltage)
         print("sensor:channel:{}".format(curr_channel))
 
-    # switch
-    #if cached_switch is not switch.value:
-    #    cached_switch = switch.value
-    #    if switch.value:
-    #        print("Power On")
-    #    else:
-    #        print("Power Off")
-
-    # potentiometer
-    #curr_volume = get_voltage(potentiometer)
-    #if cached_volume is not curr_volume:
-    #    cached_volume = curr_volume
-    #    print("Volume: ", curr_volume)
     
     time.sleep(0.1)
     pass

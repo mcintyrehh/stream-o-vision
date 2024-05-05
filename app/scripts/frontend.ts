@@ -66,17 +66,17 @@ const streams = [
   },
   {
     streamUrl:
-      "https://videos3.earthcam.com/fecnetwork/4017timessquare.flv/playlist.m3u8",
+      "https://videos3.earthcam.com/fecnetwork/1415.flv/playlist.m3u8",
     url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tstwo_hd",
     name: "Times Square View (South)",
     channelNumber: 5,
   },
   {
     streamUrl:
-      "https://videos-3.earthcam.com/fecnetwork/485.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsnorth_hd",
-    name: "Times Square View (North)",
-    channelNumber: 6,
+      "https://videos3.earthcam.com/fecnetwork/15559.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsrobo3",
+    name: "Times Square Crossroads",
+    channelNumber: 8,
   },
   {
     streamUrl: "https://videos3.earthcam.com/fecnetwork/9974.flv/playlist.m3u8",
@@ -86,8 +86,8 @@ const streams = [
   },
   {
     streamUrl:
-      "https://videos3.earthcam.com/fecnetwork/15559.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsrobo3",
+      "https://videos-3.earthcam.com/fecnetwork/23505.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/usa/newyork/heraldsquare/?cam=heraldsquare_nyc",
     name: "Times Square Crossroads",
     channelNumber: 8,
   },

@@ -1,4 +1,4 @@
-// import {WebSocket} from 'ws';
+type VolumeDirection = 'up' | 'down'
 
 const socket = new WebSocket('ws://localhost:3000');
 socket.onopen = () => {
@@ -16,8 +16,8 @@ const handleWSMessage = (data: string) => {
       setChannel(parseInt(reading));
       break; 
     case 'volume':
-      console.log("~henry - volume: ", reading)
-      setVolume(parseInt(reading));
+      console.log("~henry - volume direction: ", reading)
+      setVolume(reading as VolumeDirection);
       break; 
     case 'mute':
       console.log("~henry - muting")
@@ -28,8 +28,15 @@ const handleWSMessage = (data: string) => {
   }
 }
 
+type Stream = {
+  streamUrl: string,
+  url: string,
+  name: string,
+  channelNumber: number,
+}
+
 //TODO set up webpack so I can import this from a const file
-const streams = [
+const streams: Stream[] = [
   {
     streamUrl:
       "https://videos3.earthcam.com/fecnetwork/20489.flv/playlist.m3u8",
@@ -113,15 +120,6 @@ let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
 let muted = true;
 
-const wrapper = document.getElementsByClassName("video-wrapper")[0] as HTMLDivElement;
-wrapper.style.display = "flex";
-wrapper.style.flexWrap = "nowrap";
-wrapper.style.flexDirection = "column";
-wrapper.style.position = "relative";
-wrapper.style.height = "100vh";
-wrapper.style.width = "100vw";
-wrapper.style.backgroundImage = "url('./static/static-tv-static.gif')";
-
 const proxyURLFromStreamIndex = (streamIndex: number) => {
   const proxy_url = "http://127.0.0.1:8182";
   const referer_url = "https://www.earthcam.com/";
@@ -137,9 +135,20 @@ const setChannel = (channel: number) => {
   createHLSVideoElement();
 }
 
-const setVolume = (volume: number) => {
-  console.log("volume: ", -1/volume)
-  _video.volume = -1/volume;
+// @todo: https://github.com/mcintyrehh/stream-o-vision/issues/1
+const setVolume = (volume: VolumeDirection) => {
+  // @todo: change this to logarithmic!
+  // @see: https://github.com/videojs/video.js/issues/8498
+  const volumeDiff = volume === 'up' ? .01 : -.01
+  _video.volume += volumeDiff;
+  console.log("volume: ", _video.volume)
+  const videoEl = document.getElementsByTagName('video')[0];
+  const textTrack = videoEl.textTracks[0];
+  const activeCues = textTrack.activeCues || []
+  for (let i = 0; i < activeCues?.length || 0; i++) {
+    textTrack.removeCue(activeCues[i])
+  }
+  textTrack.addCue(new VTTCue(videoEl.currentTime, videoEl.currentTime + 2, `Volume: ${Math.round(videoEl.volume * 100)}`))
 }
 
 const setMuted = () => {
@@ -148,22 +157,27 @@ const setMuted = () => {
   _video.muted = muted;
 }
 
+const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
+  console.log(videoEl.currentTime);
+  const { channelNumber, name } = streams[currentChannelIndex];
+  let track = videoEl.addTextTrack("captions", "Channel Info", "en-US");
+  track.mode = "showing";
+  track.addCue(new VTTCue(0, 10, createChannelCueText(channelNumber, name)))
+}
+
 const onChannelChange = (direction: "up" | "down") => {
   const channelDirection = direction === "up" ? 1 : -1;
   // Adding streams.length makes sure wrap-around works for negative numbers
   currentChannelIndex =
     (currentChannelIndex + channelDirection + streams.length) % streams.length;
-  createHLSVideoElement();
+  hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex))
 };
 
+const createChannelCueText = (channelNumber: Stream['channelNumber'], channelDescription: Stream['name']) => {
+  return `Channel ${channelNumber} - ${channelDescription}`
+}
+
 const createHLSVideoElement = () => {
-  const videoElement = document.getElementsByClassName("video-wrapper")[0];
-  if (videoElement) {
-    videoElement.parentNode?.removeChild(videoElement);
-  }
-  if (hls) {
-    hls.destroy();
-  }
   var wrapper = document.createElement("div");
   wrapper.className = "video-wrapper";
   
@@ -200,6 +214,22 @@ const createHLSVideoElement = () => {
   channelUp.onclick = () => onChannelChange("up");
   wrapper.appendChild(channelUp);
 
+  // creating volume up and down buttons
+  const volumeDown = document.createElement("button");
+  volumeDown.innerHTML = "Volume Down";
+  volumeDown.onclick = () => setVolume("down");
+  wrapper.appendChild(volumeDown);
+
+  const volumeUp = document.createElement("button");
+  volumeUp.innerHTML = "Volume Up";
+  volumeUp.onclick = () => setVolume("up");
+  wrapper.appendChild(volumeUp);
+
+  const muted = document.createElement("button");
+  muted.innerHTML = "Toggle Mute";
+  muted.onclick = () => setMuted();
+  wrapper.appendChild(muted);
+
   const body = document.getElementsByTagName("body")[0];
   body.appendChild(wrapper);
 
@@ -214,6 +244,7 @@ const createHLSVideoElement = () => {
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
       video.muted = true;
       video.play();
+      addTextTrackToVideoElement(video);
     });
   }
   // hls.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.

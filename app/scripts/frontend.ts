@@ -113,6 +113,8 @@ let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
 let muted = true;
 
+const VOLUME_INCREMENT = 5;
+
 const proxyURLFromStreamIndex = (streamIndex: number) => {
 	const proxy_url = "http://127.0.0.1:8182";
 	const referer_url = "https://www.earthcam.com/";
@@ -133,7 +135,7 @@ const setVolume = (volume: VolumeDirection) => {
 	// @todo: change this to logarithmic!
 	// @see: https://github.com/videojs/video.js/issues/8498
 	const currVolume = _video.volume;
-	const volumeDiff = volume === 'up' ? .01 : -.01
+	const volumeDiff = (volume === 'up' ? .01 : -.01) * VOLUME_INCREMENT;
 	_video.volume =  Math.max(Math.min(currVolume + volumeDiff, 1), 0);
 	console.log("volume: ", Math.round(_video.volume*100) / 100)
 
@@ -147,9 +149,9 @@ const setVolume = (volume: VolumeDirection) => {
 }
 
 const setMuted = () => {
-	console.log("~henry - muting")
 	muted = !muted;
 	_video.muted = muted;
+	console.log("muted: ", muted);
 }
 
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {

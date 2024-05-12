@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"debug": "nodemon -e js,ts --watch app --watch scripts --watch static --exec \"yarn run build:ts && yarn run start:app\"",
+		"debug": "nodemon -e js,ts --watch app --watch scripts --watch static --exec \"npm run build:ts && npm run start:app\"",
 		"build:ts": "node_modules/.bin/tsc && cp -r app/static dist/static",
 		"start:app": "node dist/src/main",
 		"start": "npm run debug"

@@ -132,9 +132,11 @@ const setChannel = (channel: number) => {
 const setVolume = (volume: VolumeDirection) => {
 	// @todo: change this to logarithmic!
 	// @see: https://github.com/videojs/video.js/issues/8498
+	const currVolume = _video.volume;
 	const volumeDiff = volume === 'up' ? .01 : -.01
-	_video.volume += volumeDiff;
-	console.log("volume: ", _video.volume)
+	_video.volume =  Math.max(Math.min(currVolume + volumeDiff, 1), 0);
+	console.log("volume: ", Math.round(_video.volume*100) / 100)
+
 	const videoEl = document.getElementsByTagName('video')[0];
 	const textTrack = videoEl.textTracks[0];
 	const activeCues = textTrack.activeCues || []
@@ -155,7 +157,7 @@ const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
 	const { channelNumber, name } = streams[currentChannelIndex];
 	let track = videoEl.addTextTrack("captions", "Channel Info", "en-US");
 	track.mode = "showing";
-	track.addCue(new VTTCue(0, 10, createChannelCueText(channelNumber, name)))
+	track.addCue(new VTTCue(0, 10, createChannelInfoText(channelNumber, name)))
 }
 
 const onChannelChange = (direction: "up" | "down") => {
@@ -164,18 +166,22 @@ const onChannelChange = (direction: "up" | "down") => {
 	currentChannelIndex =
 		(currentChannelIndex + channelDirection + streams.length) % streams.length;
 	hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex))
+
+	const {channelNumber, name} = streams[currentChannelIndex];
+	const infoDiv = document.getElementsByClassName("channel-info")[0] as HTMLDivElement;
+	infoDiv.innerText = createChannelInfoText(channelNumber, name);	
 };
 
-const createChannelCueText = (channelNumber: Stream['channelNumber'], channelDescription: Stream['name']) => {
+const createChannelInfoText = (channelNumber: Stream['channelNumber'], channelDescription: Stream['name']) => {
 	return `Channel ${channelNumber} - ${channelDescription}`
 }
 
 const createHLSVideoElement = () => {
-	var wrapper = document.createElement("div");
+	const wrapper = document.createElement("div");
 	wrapper.className = "video-wrapper";
 	
 
-	var video = document.createElement("video");
+	const video = document.createElement("video");
 	video.style.height = "100%";
 	video.style.width = "100%";
 	video.style.backgroundImage = "url('./static/static-tv-static.gif')"
@@ -185,16 +191,14 @@ const createHLSVideoElement = () => {
 	_video = video;
 	// @ts-ignore
 	window._video = video;
-	// creating info divs below the video
-	var videoInfo = document.createElement("div");
-	var channelNumber = document.createElement("span");
-	channelNumber.className = "channel-div";
-	channelNumber.innerHTML = `Channel ${streams[currentChannelIndex].channelNumber}`;
-	videoInfo.appendChild(channelNumber);
-	var videoName = document.createElement("span");
-	videoName.innerHTML = ` - ${streams[currentChannelIndex].name}`;
-	videoInfo.appendChild(videoName);
-	wrapper.appendChild(videoInfo);
+	// creating info div below the video for debugging
+	const channelInfo = document.createElement("div");
+	channelInfo.className = "channel-info";
+
+	const {channelNumber, name} = streams[currentChannelIndex];
+	channelInfo.innerText = createChannelInfoText(channelNumber, name );
+
+	wrapper.appendChild(channelInfo);
 
 	// creating channel up and down buttons
 	const channelDown = document.createElement("button");

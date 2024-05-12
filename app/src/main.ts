@@ -83,4 +83,6 @@ app.use(express.static("public"));
 app.use("/scripts", express.static(path.join(__dirname, "..", "scripts/")));
 app.use("/static", express.static(path.join(__dirname, "..", "static/")));
 
-app.listen(1337);
+app.listen(1337, () => {
+	require('child_process').exec('start http://localhost:1337');
+});

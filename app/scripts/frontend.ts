@@ -17,7 +17,8 @@ const handleWSMessage = (data: string) => {
 			break; 
 		case 'volume':
 			console.log("~henry - volume direction: ", reading)
-			setVolume(reading as VolumeDirection);
+			const sanitizedReading = reading.indexOf('up') !== -1 ? 'up' : 'down';
+			setVolume(sanitizedReading);
 			break; 
 		case 'mute':
 			console.log("~henry - muting")

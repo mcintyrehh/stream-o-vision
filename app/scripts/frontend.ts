@@ -127,7 +127,19 @@ const proxyURLFromStreamIndex = (streamIndex: number) => {
 
 const setChannel = (channel: number) => {
 	currentChannelIndex = channel;
-	createHLSVideoElement();
+	hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex))
+
+	const {channelNumber, name} = streams[currentChannelIndex];
+	const infoDiv = document.getElementsByClassName("channel-info")[0] as HTMLDivElement;
+	infoDiv.innerText = createChannelInfoText(channelNumber, name);	
+}
+
+const deleteActiveCues = (textTrack: TextTrack) => {
+	const activeCues = textTrack.activeCues || []
+	for (let i = 0; i < activeCues?.length || 0; i++) {
+		textTrack.removeCue(activeCues[i])
+	}
+
 }
 
 // @todo: https://github.com/mcintyrehh/stream-o-vision/issues/1
@@ -141,17 +153,20 @@ const setVolume = (volume: VolumeDirection) => {
 
 	const videoEl = document.getElementsByTagName('video')[0];
 	const textTrack = videoEl.textTracks[0];
-	const activeCues = textTrack.activeCues || []
-	for (let i = 0; i < activeCues?.length || 0; i++) {
-		textTrack.removeCue(activeCues[i])
-	}
+	deleteActiveCues(textTrack)
+
 	textTrack.addCue(new VTTCue(videoEl.currentTime, videoEl.currentTime + 2, `Volume: ${Math.round(videoEl.volume * 100)}`))
 }
 
 const setMuted = () => {
 	muted = !muted;
 	_video.muted = muted;
-	console.log("muted: ", muted);
+
+	const videoEl = document.getElementsByTagName('video')[0];
+	const textTrack = videoEl.textTracks[0];
+	deleteActiveCues(textTrack)
+
+	textTrack.addCue(new VTTCue(videoEl.currentTime, videoEl.currentTime + 2, `Muted: ${muted}`))
 }
 
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
@@ -165,13 +180,8 @@ const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
 const onChannelChange = (direction: "up" | "down") => {
 	const channelDirection = direction === "up" ? 1 : -1;
 	// Adding streams.length makes sure wrap-around works for negative numbers
-	currentChannelIndex =
-		(currentChannelIndex + channelDirection + streams.length) % streams.length;
-	hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex))
-
-	const {channelNumber, name} = streams[currentChannelIndex];
-	const infoDiv = document.getElementsByClassName("channel-info")[0] as HTMLDivElement;
-	infoDiv.innerText = createChannelInfoText(channelNumber, name);	
+	const newChannelIndex = (currentChannelIndex + channelDirection + streams.length) % streams.length;
+	setChannel(newChannelIndex);
 };
 
 const createChannelInfoText = (channelNumber: Stream['channelNumber'], channelDescription: Stream['name']) => {

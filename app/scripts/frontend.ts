@@ -1,5 +1,12 @@
 type VolumeDirection = 'up' | 'down'
 
+declare global {
+	interface Window {
+		 // added to window for quick browser debugging
+		_video: HTMLVideoElement;
+	}
+}
+
 const socket = new WebSocket('ws://localhost:3000');
 socket.onopen = () => {
 	socket.send('Hello, its ya boy Henry');
@@ -108,7 +115,7 @@ const streams: Stream[] = [
 	},
 ];
 
-//@ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let hls: any;
 let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
@@ -173,7 +180,7 @@ const setMuted = () => {
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
 	console.log(videoEl.currentTime);
 	const { channelNumber, name } = streams[currentChannelIndex];
-	let track = videoEl.addTextTrack("captions", "Channel Info", "en-US");
+	const track = videoEl.addTextTrack("captions", "Channel Info", "en-US");
 	track.mode = "showing";
 	track.addCue(new VTTCue(0, 10, createChannelInfoText(channelNumber, name)))
 }
@@ -202,7 +209,6 @@ const createHLSVideoElement = () => {
 	wrapper.appendChild(video);
 	// Global ref to video elem
 	_video = video;
-	// @ts-ignore
 	window._video = video;
 	// creating info div below the video for debugging
 	const channelInfo = document.createElement("div");

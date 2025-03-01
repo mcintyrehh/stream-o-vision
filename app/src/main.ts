@@ -8,11 +8,11 @@ import { WebSocketServer } from 'ws'
 
 console.log("os.type(): ", os.type())
 
-const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyACM0"
+const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyACM1"
 
-SerialPort.list().then(ports => {
-	console.log("Ports: ", ports);
-})
+// // Debugging Serial Ports
+// SerialPort.list().then(ports => console.log("Ports: ", ports))
+
 // Open WebSocket for communication with frontend
 const wss = new WebSocketServer({port: 3000})
 

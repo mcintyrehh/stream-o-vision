@@ -130,4 +130,5 @@ dist
 .pnp.*
 
 *.code-workspace
-./vscode
+.vscode
+stream-o-vision.code-workspace

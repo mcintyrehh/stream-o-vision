@@ -7,7 +7,9 @@ List serial ports with:
 `sudo dmesg | grep tty`
 
 Can monitor serial port with:
-`sudo minicom -b 115200 -o -D /dev/ttyACM0`
+`sudo minicom -b 115200 -o -d /dev/ttyACM0`
+
+Where `-b` is the baud rate, and `-d` is the microcontroller device. `-o` spe
 
 "can't open device "/dev/ttyACM0": Permission denied" error?
   You need to add yourself to the dialout group:

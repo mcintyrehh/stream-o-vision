@@ -1,21 +1,23 @@
 # stream-o-vision
 
 
-## Serial Port Debugging
+## CircuitPython Development/Tooling
 
-List serial ports with:
-`sudo dmesg | grep tty`
+The best way I've found to develop in VSCode is to use the CircuitPython v2 extension. You can connect to a serial port with the 'CircuitPython: Open Serial Monitor' command and selecting the appropriate port. This will open a terminal window in VSCode that will display the serial output from the microcontroller, and automatically refresh on save.
 
-Can monitor serial port with:
-`sudo minicom -b 115200 -o -d /dev/ttyACM0`
+If you'd developing on Linux and you'd like to work in a local version controlled directory, you can use the `./sync.sh` script to sync the contents of `./microcontroller` with the mounted CircuitPython drive.
+In order to use this script you will need `inotify-tools` installed. You can install it with the following command:
+```bash
+sudo apt-get install inotify-tools
+```
 
-Where `-b` is the baud rate, and `-d` is the microcontroller device. `-o` spe
+Usage (assuming you've run `chmod +x sync.sh`):
+```bash
+./sync.sh [optional path to CIRCUITPY]
+```
+The script will take an optional argument to specify the path to the mounted CircuitPython drive. If no argument is provided, the script will default to `/media/$USER/CIRCUITPY`.
 
-"can't open device "/dev/ttyACM0": Permission denied" error?
-  You need to add yourself to the dialout group:
-  `sudo usermod -a -G dialout $USER`
-  then log out and back in, or restart to apply changes.
-
+With this script running, you can develop directly from the mounted CircuitPython drive, and the script will automatically sync the changes to the local directory, where they can be version controlled.
 
 ## Docs
 - Adafruit Featherwing OLED: https://learn.adafruit.com/adafruit-128x64-oled-featherwing/circuitpython

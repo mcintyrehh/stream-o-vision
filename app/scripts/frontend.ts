@@ -1,4 +1,6 @@
+import "./styles.css";
 import { streams, type Stream } from "./streams";
+import Hls from "hls.js";
 
 type VolumeDirection = "up" | "down";
 
@@ -18,7 +20,7 @@ socket.onmessage = (event) => handleWSMessage(event.data);
 
 const handleWSMessage = (data: string) => {
   console.log("~henry - data: ", data);
-  const [_, sensor, reading] = data.split(":");
+  const [, sensor, reading] = data.split(":"); // skip unused variable
   switch (sensor) {
     case "channel":
       console.log("~henry - channel: ", reading);
@@ -38,7 +40,7 @@ const handleWSMessage = (data: string) => {
   }
 };
 
-let hls: any;
+let hls: Hls;
 let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
 let muted = true;
@@ -186,14 +188,11 @@ const createHLSVideoElement = () => {
   const body = document.getElementsByTagName("body")[0];
   body.appendChild(wrapper);
 
-  //@ts-ignore
   if (Hls.isSupported()) {
-    //@ts-ignore
     hls = new Hls();
     console.log("hls: ", hls);
     hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
     hls.attachMedia(video);
-    // @ts-ignore
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
       video.muted = true;
       video.play();

@@ -43,6 +43,7 @@
 		"@tsconfig/node-lts": "^18.12.4",
 		"@warren-bank/hls-proxy": "^3.4.0",
 		"express": "^4.18.2",
+		"hls.js": "^1.6.4",
 		"nodemon": "^3.0.1",
 		"path": "^0.12.7",
 		"serialport": "^12.0.0",

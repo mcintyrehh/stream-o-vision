@@ -22,9 +22,5 @@ body {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  background: #000;
-}
-
-video {
-    background-image: url('/tv-static.gif');
+  background-image: url('/tv-static.gif');
 }

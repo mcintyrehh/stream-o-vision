@@ -84,5 +84,6 @@ app.use("/scripts", express.static(path.join(__dirname, "..", "scripts/")));
 app.use("/static", express.static(path.join(__dirname, "..", "static/")));
 
 app.listen(1337, () => {
+		console.log("Server is running on http://localhost:1337");
 		require('child_process').exec('start http://localhost:1337');
 });

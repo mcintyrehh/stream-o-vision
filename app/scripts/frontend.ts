@@ -1,8 +1,9 @@
-import "./styles.css";
-import { streams, type Stream } from "./streams";
 import Hls from "hls.js";
+import { streams, type Stream } from "./streams";
+import "./styles.css";
 
 type VolumeDirection = "up" | "down";
+let menuLayer = 0;
 
 declare global {
   interface Window {
@@ -185,30 +186,89 @@ const createHLSVideoElement = () => {
   muted.onclick = () => setMuted();
   wrapper.appendChild(muted);
 
+  // Add overlay with arrow controls
+  const overlay = document.createElement("div");
+  overlay.className = "video-overlay";
+  overlay.innerHTML = `
+    <div class="arrow-controls">
+      <button class="arrow arrow-up" aria-label="Up">&#8593;</button>
+      <div class="arrow-row">
+        <button class="arrow arrow-left" aria-label="Left">&#8592;</button>
+        <button class="arrow arrow-center" aria-label="Center">&#9679;</button>
+        <button class="arrow arrow-right" aria-label="Right">&#8594;</button>
+        </div>
+        <button class="arrow arrow-down" aria-label="Down">&#8595;</button>
+    </div>
+  `;
+  // Place overlay after the video element if it exists, otherwise append
+  if (wrapper.children.length > 0) {
+    wrapper.insertBefore(overlay, wrapper.children[1] || null);
+  } else {
+    wrapper.appendChild(overlay);
+  }
+
+  // Add event listeners to arrow buttons
+  const handleArrowClick = (direction: "up" | "down" | "left" | "right" | "center") => {
+    // Route behavior here
+    console.log("Arrow pressed:", direction);
+    const videoEl = document.getElementsByTagName("video")[0];
+    const textTrack = videoEl.textTracks[0];
+    deleteActiveCues(textTrack);
+
+    textTrack.addCue(
+      new VTTCue(
+        videoEl.currentTime,
+        videoEl.currentTime + 999,
+        `Arrow Pressed: ${direction}`
+      )
+    );
+  };
+  overlay
+    .querySelector(".arrow-up")
+    ?.addEventListener("click", () => handleArrowClick("up"));
+  overlay
+    .querySelector(".arrow-down")
+    ?.addEventListener("click", () => handleArrowClick("down"));
+  overlay
+    .querySelector(".arrow-left")
+    ?.addEventListener("click", () => handleArrowClick("left"));
+  overlay
+    .querySelector(".arrow-right")
+    ?.addEventListener("click", () => handleArrowClick("right"));
+  overlay
+    .querySelector(".arrow-right")
+    ?.addEventListener("click", () => handleArrowClick("center"));
+
   const body = document.getElementsByTagName("body")[0];
   body.appendChild(wrapper);
 
-  if (Hls.isSupported()) {
-    hls = new Hls();
-    console.log("hls: ", hls);
-    hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
-    hls.attachMedia(video);
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      video.muted = true;
-      video.play();
-      addTextTrackToVideoElement(video);
-    });
+  if (!Hls.isSupported()) {
+    throw new Error("HLS is not supported in this browser.");
   }
-  // hls.js is not supported on platforms that do not have Media Source Extensions (MSE) enabled.
-  // When the browser has built-in HLS support (check using `canPlayType`), we can provide an HLS manifest (i.e. .m3u8 URL) directly to the video element through the `src` property.
-  // This is using the built-in support of the plain video element, without using hls.js.
-  else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-    video.src = "https://video-dev.github.io/streams/x36xhzz/x36xhzz.m3u8";
-    video.addEventListener("canplay", function () {
-      video.muted = true;
-      video.play();
-    });
-  }
+  hls = new Hls();
+  console.log("hls: ", hls);
+  hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
+  hls.attachMedia(video);
+  hls.on(Hls.Events.MANIFEST_PARSED, function () {
+    video.muted = true;
+    video.play();
+    addTextTrackToVideoElement(video);
+  });
 };
 
 createHLSVideoElement();
+
+const menuStructure = {
+  Channels: {
+    "Brooklyn Bridge": () => setChannel(0),
+    "World Trade Center": () => setChannel(1),
+    "Wall Street Bull": () => setChannel(2),
+    "Times Square": () => setChannel(3),
+    "Times Square View (South)": () => setChannel(4),
+    "Times Square View (North)": () => setChannel(5),
+    "Times Square Street Cam": () => setChannel(6),
+    "Times Square Crossroads": () => setChannel(7),
+    "Midtown Skyline": () => setChannel(8),
+    "Brooklyn Bridge View": () => setChannel(9),
+  },
+};

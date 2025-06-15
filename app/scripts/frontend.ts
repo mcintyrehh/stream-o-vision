@@ -3,7 +3,8 @@ import { streams, type Stream } from "./streams";
 import "./styles.css";
 
 type VolumeDirection = "up" | "down";
-let menuLayer = 0;
+// const scanlinesClass = "scanlines";
+const scanlinesClass = "crt";
 
 declare global {
   interface Window {
@@ -45,6 +46,9 @@ let hls: Hls;
 let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
 let muted = true;
+let scanlinesEnabled = true;
+let bwEnabled = false;
+let menuLayer = 0;
 
 const VOLUME_INCREMENT = 5;
 
@@ -142,9 +146,12 @@ const createHLSVideoElement = () => {
   }
 
   const wrapper = document.createElement("div");
-  wrapper.className = "video-wrapper";
+  wrapper.classList.add("video-wrapper");
+  wrapper.classList.add(scanlinesClass);
 
   const video = document.createElement("video");
+  video.classList.add("grayscale");
+  video.classList.add(scanlinesClass);
 
   wrapper.appendChild(video);
   // Global ref to video elem
@@ -159,45 +166,29 @@ const createHLSVideoElement = () => {
 
   wrapper.appendChild(channelInfo);
 
-  // creating channel up and down buttons
-  const channelDown = document.createElement("button");
-  channelDown.innerHTML = "Channel Down";
-  channelDown.onclick = () => onChannelChange("down");
-  wrapper.appendChild(channelDown);
-
-  const channelUp = document.createElement("button");
-  channelUp.innerHTML = "Channel Up";
-  channelUp.onclick = () => onChannelChange("up");
-  wrapper.appendChild(channelUp);
-
-  // creating volume up and down buttons
-  const volumeDown = document.createElement("button");
-  volumeDown.innerHTML = "Volume Down";
-  volumeDown.onclick = () => setVolume("down");
-  wrapper.appendChild(volumeDown);
-
-  const volumeUp = document.createElement("button");
-  volumeUp.innerHTML = "Volume Up";
-  volumeUp.onclick = () => setVolume("up");
-  wrapper.appendChild(volumeUp);
-
-  const muted = document.createElement("button");
-  muted.innerHTML = "Toggle Mute";
-  muted.onclick = () => setMuted();
-  wrapper.appendChild(muted);
-
-  // Add overlay with arrow controls
+  // Add overlay with arrow controls and toggles, plus channel/volume/mute controls
   const overlay = document.createElement("div");
   overlay.className = "video-overlay";
   overlay.innerHTML = `
     <div class="arrow-controls">
+      <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
+        <button class="channel-up">Channel Up</button>
+        <button class="channel-down">Channel Down</button>
+        <button class="volume-up">Volume Up</button>
+        <button class="volume-down">Volume Down</button>
+        <button class="toggle-mute">Toggle Mute</button>
+      </div>
       <button class="arrow arrow-up" aria-label="Up">&#8593;</button>
       <div class="arrow-row">
         <button class="arrow arrow-left" aria-label="Left">&#8592;</button>
         <button class="arrow arrow-center" aria-label="Center">&#9679;</button>
         <button class="arrow arrow-right" aria-label="Right">&#8594;</button>
-        </div>
-        <button class="arrow arrow-down" aria-label="Down">&#8595;</button>
+      </div>
+      <button class="arrow arrow-down" aria-label="Down">&#8595;</button>
+      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
+        <button class="toggle-bw">Enable Black & White</button>
+        <button class="toggle-scanlines">Toggle Scanlines</button>
+      </div>
     </div>
   `;
   // Place overlay after the video element if it exists, otherwise append
@@ -206,38 +197,6 @@ const createHLSVideoElement = () => {
   } else {
     wrapper.appendChild(overlay);
   }
-
-  // Add event listeners to arrow buttons
-  const handleArrowClick = (direction: "up" | "down" | "left" | "right" | "center") => {
-    // Route behavior here
-    console.log("Arrow pressed:", direction);
-    const videoEl = document.getElementsByTagName("video")[0];
-    const textTrack = videoEl.textTracks[0];
-    deleteActiveCues(textTrack);
-
-    textTrack.addCue(
-      new VTTCue(
-        videoEl.currentTime,
-        videoEl.currentTime + 999,
-        `Arrow Pressed: ${direction}`
-      )
-    );
-  };
-  overlay
-    .querySelector(".arrow-up")
-    ?.addEventListener("click", () => handleArrowClick("up"));
-  overlay
-    .querySelector(".arrow-down")
-    ?.addEventListener("click", () => handleArrowClick("down"));
-  overlay
-    .querySelector(".arrow-left")
-    ?.addEventListener("click", () => handleArrowClick("left"));
-  overlay
-    .querySelector(".arrow-right")
-    ?.addEventListener("click", () => handleArrowClick("right"));
-  overlay
-    .querySelector(".arrow-right")
-    ?.addEventListener("click", () => handleArrowClick("center"));
 
   const body = document.getElementsByTagName("body")[0];
   body.appendChild(wrapper);
@@ -254,21 +213,91 @@ const createHLSVideoElement = () => {
     video.play();
     addTextTrackToVideoElement(video);
   });
+
+  // Add event listeners for channel/volume/mute controls
+  overlay
+    .querySelector(".channel-down")
+    ?.addEventListener("click", () => onChannelChange("down"));
+  overlay
+    .querySelector(".channel-up")
+    ?.addEventListener("click", () => onChannelChange("up"));
+  overlay
+    .querySelector(".volume-down")
+    ?.addEventListener("click", () => setVolume("down"));
+  overlay
+    .querySelector(".volume-up")
+    ?.addEventListener("click", () => setVolume("up"));
+  overlay
+    .querySelector(".toggle-mute")
+    ?.addEventListener("click", () => setMuted());
+
+  // Add event listeners to arrow buttons
+  const handleArrowClick = (
+    direction: "up" | "down" | "left" | "right" | "center"
+  ) => {
+    console.log("Arrow pressed:", direction);
+    const videoEl = document.getElementsByTagName("video")[0];
+    const textTrack = videoEl.textTracks[0];
+    deleteActiveCues(textTrack);
+
+    textTrack.addCue(
+      new VTTCue(
+        videoEl.currentTime,
+        videoEl.currentTime + 999,
+        `Arrow Pressed: ${direction}`
+      )
+    );
+  };
+
+  for (const direction of ["up", "down", "left", "right", "center"] as const) {
+    overlay
+      .querySelector(`.arrow-${direction}`)
+      ?.addEventListener("click", () => handleArrowClick(direction));
+  }
+
+  // Add event listener for Black & White toggle
+  const videoEl = wrapper.querySelector("video");
+  const bwBtn = overlay.querySelector(".toggle-bw") as HTMLButtonElement;
+
+  bwBtn.addEventListener("click", () => {
+    bwEnabled = !bwEnabled;
+    videoEl?.style.setProperty("--grayscaleLevel", bwEnabled ? "1" : "0");
+    bwBtn.textContent = bwEnabled ? "Disable Black & White" : "Enable Black & White";
+  });
+  // Set initial grayscaleLevel
+  videoEl?.style.setProperty("--grayscaleLevel", "0");
+
+  // Add event listener for Scanlines toggle
+  const scanlinesBtn = overlay.querySelector(
+    ".toggle-scanlines"
+  ) as HTMLButtonElement;
+  scanlinesBtn.addEventListener("click", () => {
+    scanlinesEnabled = !scanlinesEnabled;
+    if (scanlinesEnabled) {
+      wrapper.classList.add(scanlinesClass);
+      scanlinesBtn.textContent = "Disable Scanlines";
+    } else {
+      wrapper.classList.remove(scanlinesClass);
+      scanlinesBtn.textContent = "Enable Scanlines";
+    }
+  });
+  // Set initial scanlines button text
+  scanlinesBtn.textContent = "Disable Scanlines";
+
+  const menuStructure = {
+    Channels: {
+      "Brooklyn Bridge": () => setChannel(0),
+      "World Trade Center": () => setChannel(1),
+      "Wall Street Bull": () => setChannel(2),
+      "Times Square": () => setChannel(3),
+      "Times Square View (South)": () => setChannel(4),
+      "Times Square View (North)": () => setChannel(5),
+      "Times Square Street Cam": () => setChannel(6),
+      "Times Square Crossroads": () => setChannel(7),
+      "Midtown Skyline": () => setChannel(8),
+      "Brooklyn Bridge View": () => setChannel(9),
+    },
+  };
 };
 
 createHLSVideoElement();
-
-const menuStructure = {
-  Channels: {
-    "Brooklyn Bridge": () => setChannel(0),
-    "World Trade Center": () => setChannel(1),
-    "Wall Street Bull": () => setChannel(2),
-    "Times Square": () => setChannel(3),
-    "Times Square View (South)": () => setChannel(4),
-    "Times Square View (North)": () => setChannel(5),
-    "Times Square Street Cam": () => setChannel(6),
-    "Times Square Crossroads": () => setChannel(7),
-    "Midtown Skyline": () => setChannel(8),
-    "Brooklyn Bridge View": () => setChannel(9),
-  },
-};

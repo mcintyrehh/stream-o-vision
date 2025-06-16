@@ -3,8 +3,8 @@ import { streams, type Stream } from "./streams";
 import "./styles.css";
 
 type VolumeDirection = "up" | "down";
-// const scanlinesClass = "scanlines";
-const scanlinesClass = "crt";
+const scanlinesClass = "scanlines";
+// const scanlinesClass = "crt";
 
 declare global {
   interface Window {

@@ -14,7 +14,7 @@
 		"start:app": "node dist/src/main",
 		"start": "npm run debug",
 		"dev": "concurrently \"vite\" \"npm run start:app\"",
-		"build": "vite build",
+		"build": "npm run build:ts && vite build",
 		"preview": "vite preview"
 	},
 	"repository": {

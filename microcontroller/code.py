@@ -33,6 +33,18 @@ while True:
     # rotary encoder
     rotary_switch.read_channel()
     
+    # b&w switch
+    # @todo
+    
+    # scanline switch
+    # @todo
+    
+    # vignette/barrel distortion potentiometer
+    # @todo
+    
+    # smell-o-vision
+    # @todo
+    
     time.sleep(0.1)
     pass
 

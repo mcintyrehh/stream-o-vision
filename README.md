@@ -21,3 +21,11 @@ With this script running, you can develop directly from the mounted CircuitPytho
 
 ## Docs
 - Adafruit Featherwing OLED: https://learn.adafruit.com/adafruit-128x64-oled-featherwing/circuitpython
+- Analog Video Vertical Sync: https://youtu.be/NY2rIjkH1Xw?si=GuOFTU6XGeTw2jW9
+- NTSC 525 Scanlines: https://en.wikipedia.org/wiki/NTSC
+
+## TODOs/Brainstorming
+- update scanlines count to match NTSC 525 spec
+    - note: only show 486 scanlines that make up the visible raster
+- on a random interval trigger a vertical sync issue that causes the image to roll vertically
+    - smacking the top right of the screen will trigger a vibration sensor switch that will "fix" the problem

@@ -12,36 +12,28 @@ class VolumeController():
 
         self.encoder = rotaryio.IncrementalEncoder(a_pin, b_pin)
 
-        self.cached_button = self.button.value
+        self.cached_button_value = self.button.value
         self.cached_volume = self.encoder.position
-
-        self.volume_direction = None
 
     @property
     def muted(self):
-        return not self.button.value
+        return self.button.value
     
     @property
     def volume(self):
         return self.encoder.position
-    
-    @property
-    def has_muted_changed(self):
-        print("self.muted: ", self.muted)
-        if self.cached_button is not self.muted:
-            self.cached_button = self.muted
-            return True
-        return False
 
     def read_volume(self) -> None:
-        if self.cached_volume is not self.volume:
+        new_volume = self.volume
+        if new_volume is not self.cached_volume:
             # "An IncrementalEncoder tracks the positional state of an incremental rotary encoder (a.k.a. a quadrature encoder.) 
             #  Position is relative to the position when the object is constructed.""
-            volume_direction = "up" if self.volume > self.cached_volume else "down"
-            self.cached_volume = self.volume
+            volume_direction = "up" if new_volume > self.cached_volume else "down"
+            self.cached_volume = new_volume
             print("sensor:volume:{}".format(volume_direction))
 
     def read_mute(self) -> None:
-        if self.cached_button is not self.button.value:
-            self.cached_button = self.button.value
+        new_button_value = self.muted
+        if new_button_value is not self.cached_button_value:
+            self.cached_button_value = new_button_value
             print("sensor:mute:pressed")        

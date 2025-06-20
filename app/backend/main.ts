@@ -11,7 +11,7 @@ console.log("os.type(): ", os.type());
 const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyACM0";
 
 // // Debugging Serial Ports
-SerialPort.list().then((ports) => console.log("Ports: ", ports));
+//SerialPort.list().then((ports) => console.log("Ports: ", ports));
 
 // Open WebSocket for communication with frontend
 const wss = new WebSocketServer({ port: 3000 });
@@ -85,7 +85,7 @@ app.get("/", function (req, res) {
 });
 
 app.use(express.static("public"));
-app.use("/scripts", express.static(path.join(__dirname, "..", "scripts/")));
+app.use("/frontend", express.static(path.join(__dirname, "..", "frontend/")));
 app.use("/static", express.static(path.join(__dirname, "..", "static/")));
 
 app.listen(1337, () => {

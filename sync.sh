@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SOURCE_DIR="/media/$USER/CIRCUITPY/"
-TARGET_DIR="./microcontroller/"
+SOURCE_DIR="./microcontroller/"
+TARGET_DIR="/media/$USER/CIRCUITPY/"
 echo "Source Directory: $SOURCE_DIR"
 echo "Target Directory: $TARGET_DIR"
 

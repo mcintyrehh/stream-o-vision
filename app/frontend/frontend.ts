@@ -25,17 +25,20 @@ const handleWSMessage = (data: string) => {
   const [, sensor, reading] = data.split(":"); // skip unused variable
   switch (sensor) {
     case "channel":
-      console.log("~henry - channel: ", reading);
       setChannel(parseInt(reading));
       break;
     case "volume":
-      console.log("~henry - volume direction: ", reading);
       const sanitizedReading = reading.indexOf("up") !== -1 ? "up" : "down";
       setVolume(sanitizedReading);
       break;
     case "mute":
-      console.log("~henry - muting");
       setMuted();
+      break;
+    case "grayscale":
+      toggleGrayscale();
+      break;
+    case "scanlines":
+      toggleScanlines();
       break;
     default:
       return;
@@ -47,7 +50,7 @@ let _video: HTMLVideoElement;
 let currentChannelIndex = 2;
 let muted = true;
 let scanlinesEnabled = true;
-let bwEnabled = false;
+let grayscaleEnabled = false;
 let menuLayer = 0;
 
 const VOLUME_INCREMENT = 5;
@@ -106,13 +109,30 @@ const setMuted = () => {
   muted = !muted;
   _video.muted = muted;
 
-  const videoEl = document.getElementsByTagName("video")[0];
-  const textTrack = videoEl.textTracks[0];
+  const textTrack = _video.textTracks[0];
   deleteActiveCues(textTrack);
 
   textTrack.addCue(
-    new VTTCue(videoEl.currentTime, videoEl.currentTime + 2, `Muted: ${muted}`)
+    new VTTCue(_video.currentTime, _video.currentTime + 2, `Muted: ${muted}`)
   );
+};
+
+const toggleGrayscale = () => {
+  grayscaleEnabled = !grayscaleEnabled;
+  _video?.style.setProperty("--grayscaleLevel", grayscaleEnabled ? "1" : "0");
+};
+
+const toggleScanlines = () => {
+  const videoWrapper = document.querySelector(".video-wrapper");
+  if (videoWrapper) {
+    const hasScanlines = videoWrapper.classList.contains(scanlinesClass);
+    if (hasScanlines) {
+      videoWrapper.classList.remove(scanlinesClass);
+    } else {
+      videoWrapper.classList.add(scanlinesClass);
+    }
+    console.log("Scanlines enabled:", !hasScanlines);
+  }
 };
 
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
@@ -186,7 +206,7 @@ const createHLSVideoElement = () => {
       </div>
       <button class="arrow arrow-down" aria-label="Down">&#8595;</button>
       <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
-        <button class="toggle-bw">Enable Black & White</button>
+        <button class="toggle-grayscale">Toggle Grayscale</button>
         <button class="toggle-scanlines">Toggle Scanlines</button>
       </div>
     </div>
@@ -255,15 +275,13 @@ const createHLSVideoElement = () => {
       ?.addEventListener("click", () => handleArrowClick(direction));
   }
 
-  // Add event listener for Black & White toggle
+  // Add event listener for Grayscale toggle
   const videoEl = wrapper.querySelector("video");
-  const bwBtn = overlay.querySelector(".toggle-bw") as HTMLButtonElement;
+  const toggleGrayscaleButton = overlay.querySelector(
+    ".toggle-grayscale"
+  ) as HTMLButtonElement;
 
-  bwBtn.addEventListener("click", () => {
-    bwEnabled = !bwEnabled;
-    videoEl?.style.setProperty("--grayscaleLevel", bwEnabled ? "1" : "0");
-    bwBtn.textContent = bwEnabled ? "Disable Black & White" : "Enable Black & White";
-  });
+  toggleGrayscaleButton.addEventListener("click", () => toggleGrayscale());
   // Set initial grayscaleLevel
   videoEl?.style.setProperty("--grayscaleLevel", "0");
 
@@ -271,18 +289,7 @@ const createHLSVideoElement = () => {
   const scanlinesBtn = overlay.querySelector(
     ".toggle-scanlines"
   ) as HTMLButtonElement;
-  scanlinesBtn.addEventListener("click", () => {
-    scanlinesEnabled = !scanlinesEnabled;
-    if (scanlinesEnabled) {
-      wrapper.classList.add(scanlinesClass);
-      scanlinesBtn.textContent = "Disable Scanlines";
-    } else {
-      wrapper.classList.remove(scanlinesClass);
-      scanlinesBtn.textContent = "Enable Scanlines";
-    }
-  });
-  // Set initial scanlines button text
-  scanlinesBtn.textContent = "Disable Scanlines";
+  scanlinesBtn.addEventListener("click", () => toggleScanlines());
 
   const menuStructure = {
     Channels: {

@@ -24,7 +24,9 @@ With this script running, you can develop directly from the mounted CircuitPytho
 - Adafruit Featherwing OLED: https://learn.adafruit.com/adafruit-128x64-oled-featherwing/circuitpython
 - Analog Video Vertical Sync: https://youtu.be/NY2rIjkH1Xw?si=GuOFTU6XGeTw2jW9
 - NTSC 525 Scanlines: https://en.wikipedia.org/wiki/NTSC
-
+- Skeuomorphic Design: https://en.wikipedia.org/wiki/Skeuomorph
+- https://codepen.io/meduzen/pen/zxbwRV 
+    - scanline animation
 
 ## TODOs/Brainstorming
 - update scanlines count to match NTSC 525 spec

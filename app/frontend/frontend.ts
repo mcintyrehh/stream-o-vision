@@ -1,6 +1,11 @@
 import Hls from "hls.js";
 import { streams, type Stream } from "./streams";
 import "./styles.css";
+declare global {
+  interface Window {
+    _video: HTMLVideoElement;
+  }
+}
 
 // === Constants and State ===
 type VolumeDirection = "up" | "down";
@@ -10,8 +15,9 @@ const scanlinesClass = "scanlines";
 let hls: Hls;
 let _video: HTMLVideoElement;
 let _videoWrapper: HTMLDivElement;
+let _textTrack: TextTrack;
 let currentChannelIndex = 2;
-let muted = true;
+
 let scanlinesEnabled = true;
 let grayscaleEnabled = false;
 let menuLayer = 0;
@@ -75,11 +81,9 @@ const handleWSMessage = (data: string) => {
 const setChannel = (channel: number) => {
   currentChannelIndex = channel;
   hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
-  const { channelNumber, name } = streams[currentChannelIndex];
-  const infoDiv = document.getElementsByClassName(
-    "channel-info"
-  )[0] as HTMLDivElement;
-  infoDiv.innerText = createChannelInfoText(channelNumber, name);
+  hls.once(Hls.Events.MANIFEST_PARSED, function () {
+    addTextTrackToVideoElement(_video);
+  });
 };
 
 const setVolume = (volume: VolumeDirection) => {
@@ -89,25 +93,26 @@ const setVolume = (volume: VolumeDirection) => {
   const volumeDiff = (volume === "up" ? 0.01 : -0.01) * VOLUME_INCREMENT;
   _video.volume = Math.max(Math.min(currVolume + volumeDiff, 1), 0);
   console.log("volume: ", Math.round(_video.volume * 100) / 100);
-  const videoEl = document.getElementsByTagName("video")[0];
-  const textTrack = videoEl.textTracks[0];
-  deleteActiveCues(textTrack);
-  textTrack.addCue(
+
+  deleteActiveCues(_textTrack);
+  _textTrack.addCue(
     new VTTCue(
-      videoEl.currentTime,
-      videoEl.currentTime + 2,
-      `Volume: ${Math.round(videoEl.volume * 100)}`
+      _video.currentTime,
+      _video.currentTime + 2,
+      `Volume: ${Math.round(_video.volume * 100)}`
     )
   );
 };
 
 const setMuted = () => {
-  muted = !muted;
-  _video.muted = muted;
-  const textTrack = _video.textTracks[0];
-  deleteActiveCues(textTrack);
-  textTrack.addCue(
-    new VTTCue(_video.currentTime, _video.currentTime + 2, `Muted: ${muted}`)
+  _video.muted = !_video.muted;
+  deleteActiveCues(_textTrack);
+  _textTrack.addCue(
+    new VTTCue(
+      _video.currentTime,
+      _video.currentTime + 2,
+      `Muted: ${_video.muted}`
+    )
   );
 };
 
@@ -129,10 +134,26 @@ const toggleScanlines = () => {
 
 // === Video Element and Overlay Setup ===
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
+  // Remove all existing cues from all caption tracks
+  for (let i = 0; i < videoEl.textTracks.length; i++) {
+    const track = videoEl.textTracks[i];
+    if (track.kind === "captions") {
+      while (track.cues && track.cues.length > 0) {
+        track.removeCue(track.cues[0]);
+      }
+      track.mode = "showing";
+      _textTrack = track;
+    }
+  }
+  // If no caption track exists, add one
+  if (!_textTrack || !_textTrack.cues) {
+    _textTrack = videoEl.addTextTrack("captions", "Channel Info", "en-US");
+    _textTrack.mode = "showing";
+  }
   const { channelNumber, name } = streams[currentChannelIndex];
-  const track = videoEl.addTextTrack("captions", "Channel Info", "en-US");
-  track.mode = "showing";
-  track.addCue(new VTTCue(0, 10, createChannelInfoText(channelNumber, name)));
+  _textTrack.addCue(
+    new VTTCue(0, 10, createChannelInfoText(channelNumber, name))
+  );
 };
 
 const onChannelChange = (direction: "up" | "down") => {
@@ -152,24 +173,19 @@ const createHLSVideoElement = () => {
   wrapper.classList.add(
     "video-wrapper",
     scanlinesClass,
-    "crt-curved",
+    // "crt-curved",
     "horizontal-hold"
   );
 
   const video = document.createElement("video");
   video.classList.add("grayscale", scanlinesClass);
+  video.muted = true;
 
   wrapper.appendChild(video);
   // Global ref to video elem/wrapper
   _video = video;
   _videoWrapper = wrapper;
   window._video = video;
-  // creating info div below the video for debugging
-  const channelInfo = document.createElement("div");
-  channelInfo.className = "channel-info";
-  const { channelNumber, name } = streams[currentChannelIndex];
-  channelInfo.innerText = createChannelInfoText(channelNumber, name);
-  wrapper.appendChild(channelInfo);
 
   // Add overlay with arrow controls and toggles, plus channel/volume/mute controls
   const overlay = document.createElement("div");
@@ -210,12 +226,12 @@ const createHLSVideoElement = () => {
   hls = new Hls();
   hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
   hls.attachMedia(video);
+
   hls.on(Hls.Events.MANIFEST_PARSED, function () {
-    video.muted = true;
     video.play();
-    addTextTrackToVideoElement(video);
   });
 
+  addTextTrackToVideoElement(video);
   addEventListeners(video, overlay);
 };
 
@@ -243,13 +259,11 @@ const addEventListeners = (
   const handleArrowClick = (
     direction: "up" | "down" | "left" | "right" | "center"
   ) => {
-    const videoEl = document.getElementsByTagName("video")[0];
-    const textTrack = videoEl.textTracks[0];
-    deleteActiveCues(textTrack);
-    textTrack.addCue(
+    deleteActiveCues(_textTrack);
+    _textTrack.addCue(
       new VTTCue(
-        videoEl.currentTime,
-        videoEl.currentTime + 999,
+        _video.currentTime,
+        _video.currentTime + 999,
         `Arrow Pressed: ${direction}`
       )
     );
@@ -287,9 +301,3 @@ const addEventListeners = (
 
 // === Initialize ===
 createHLSVideoElement();
-
-declare global {
-  interface Window {
-    _video: HTMLVideoElement;
-  }
-}

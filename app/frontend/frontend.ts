@@ -1,6 +1,8 @@
 import Hls from "hls.js";
 import { streams, type Stream } from "./streams";
+import { setupCRTScene as setUpCRTScene } from "./crt-threejs";
 import "./styles.css";
+
 declare global {
   interface Window {
     _video: HTMLVideoElement;
@@ -18,10 +20,11 @@ let _videoWrapper: HTMLDivElement;
 let _textTrack: TextTrack;
 let currentChannelIndex = 2;
 
-let scanlinesEnabled = true;
+// let scanlinesEnabled = true;
 let grayscaleEnabled = false;
-let menuLayer = 0;
 const VOLUME_INCREMENT = 5;
+// Enable for WebGL CRT effect, disable for pure CSS effects
+const THREE_JS_ENABLED = true;
 
 // === Utility Functions ===
 const proxyURLFromStreamIndex = (streamIndex: number) => {
@@ -164,7 +167,43 @@ const onChannelChange = (direction: "up" | "down") => {
   setChannel(newChannelIndex);
 };
 
-const createHLSVideoElement = () => {
+function setUpTextTrackOverlay(
+  video: HTMLVideoElement,
+  container: HTMLElement
+) {
+  let overlay = document.getElementById("text-track-overlay") as HTMLDivElement;
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.id = "text-track-overlay";
+    container.appendChild(overlay);
+  }
+  // Find the first showing text track
+  let track: TextTrack | undefined;
+  for (let i = 0; i < video.textTracks.length; i++) {
+    if (video.textTracks[i].mode === "showing") {
+      track = video.textTracks[i];
+      break;
+    }
+  }
+  if (!track) return;
+  function updateOverlay() {
+    const active = track!.activeCues;
+    if (active && active.length > 0) {
+      overlay.innerHTML = Array.from(active)
+        .map((cue: VTTCue | TextTrackCue) => (cue as VTTCue).text)
+        .join("<br>");
+      overlay.style.display = "block";
+    } else {
+      overlay.innerHTML = "";
+      overlay.style.display = "none";
+    }
+  }
+  track.addEventListener("cuechange", updateOverlay);
+  // Initial update
+  updateOverlay();
+}
+
+const init = () => {
   // Remove any existing video-wrapper to prevent duplicates
   const existingWrapper = document.querySelector(".video-wrapper");
   if (existingWrapper) existingWrapper.remove();
@@ -179,6 +218,8 @@ const createHLSVideoElement = () => {
 
   const video = document.createElement("video");
   video.classList.add("grayscale", scanlinesClass);
+  THREE_JS_ENABLED && video.classList.add("hidden-video");
+  
   video.muted = true;
 
   wrapper.appendChild(video);
@@ -233,6 +274,10 @@ const createHLSVideoElement = () => {
 
   addTextTrackToVideoElement(video);
   addEventListeners(video, overlay);
+  if (THREE_JS_ENABLED) {
+    setUpCRTScene(video, wrapper);
+    setUpTextTrackOverlay(video, wrapper);
+  }
 };
 
 // === Event Listeners ===
@@ -299,5 +344,4 @@ const addEventListeners = (
   scanlinesBtn.addEventListener("click", () => toggleScanlines());
 };
 
-// === Initialize ===
-createHLSVideoElement();
+init();

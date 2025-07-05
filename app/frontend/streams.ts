@@ -62,9 +62,9 @@ export const streams: Stream[] = [
   },
   {
     streamUrl:
-      "https://videos3.earthcam.com/fecnetwork/15559.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsrobo3",
-    name: "Times Square Crossroads",
+      "https://videos-3.earthcam.com/fecnetwork/21380.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/usa/newyork/coneyisland/?cam=coneyisland",
+    name: "Coney Island",
     channelNumber: 8,
   },
   {

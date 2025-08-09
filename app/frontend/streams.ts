@@ -28,9 +28,9 @@ export const streams: Stream[] = [
   },
   {
     streamUrl:
-      "https://videos3.earthcam.com/fecnetwork/chargingbull.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/usa/newyork/wallstreet/chargingbull/?cam=chargingbull_hd",
-    name: "Wall Street Bull",
+      "https://videos-3.earthcam.com/fecnetwork/22640.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/usa/newyork/highline/?cam=highline",
+    name: "High Line",
     channelNumber: 3,
   },
   {
@@ -41,23 +41,23 @@ export const streams: Stream[] = [
     channelNumber: 4,
   },
   {
-    streamUrl:
-      "https://videos3.earthcam.com/fecnetwork/4017timessquare.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tstwo_hd",
-    name: "Times Square View (South)",
+    streamUrl: "https://videos3.earthcam.com/fecnetwork/9974.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsstreet",
+    name: "Times Square Street Cam",
     channelNumber: 5,
   },
   {
     streamUrl:
-      "http://videos3.earthcam.com/fecnetwork/hdtimes10.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsnorth_hd",
-    name: "Times Square View (North)",
+      "https://videos-3.earthcam.com/fecnetwork/23505.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/usa/newyork/heraldsquare/?cam=heraldsquare_nyc",
+    name: "Harold Square",
     channelNumber: 6,
   },
   {
-    streamUrl: "https://videos3.earthcam.com/fecnetwork/9974.flv/playlist.m3u8",
-    url: "https://www.earthcam.com/cams/newyork/timessquare/?cam=tsstreet",
-    name: "Times Square Street Cam",
+    streamUrl:
+      "https://videos-3.earthcam.com/fecnetwork/27777.flv/playlist.m3u8",
+    url: "https://www.earthcam.com/usa/newyork/littleitaly/?cam=littleitaly",
+    name: "Little Italy (Mulberry Street)",
     channelNumber: 7,
   },
   {

@@ -1,7 +1,10 @@
 import * as THREE from "three";
 
-// Usage: Call setupCRTScene(videoElement) after your video is loaded and playing
-export function setupCRTScene(
+let grayscaleUniform: { value: number } | null = null;
+let horizontalHoldUniform: { value: number } = { value: 0.0 }; // Default to no hold
+
+// Usage: Call setUpCRTScene(videoElement) after your video is loaded and playing
+export function setUpCRTScene(
   video: HTMLVideoElement,
   container: HTMLElement = document.body
 ) {
@@ -37,6 +40,8 @@ export function setupCRTScene(
         value: new THREE.Vector2(window.innerWidth, window.innerHeight),
       },
       time: { value: 0 },
+      grayscale: { value: 0.0 },
+      horizontalHold: { value: 0.0 },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -49,6 +54,8 @@ export function setupCRTScene(
       uniform sampler2D tDiffuse;
       uniform vec2 resolution;
       uniform float time;
+      uniform float grayscale;
+      uniform float horizontalHold;
       varying vec2 vUv;
       
       // Barrel distortion
@@ -59,6 +66,28 @@ export function setupCRTScene(
         return cc + 0.5;
       }
       
+      // Horizontal hold distortion
+      vec2 horizontalHoldDistortion(vec2 uv, float time) {
+        if (horizontalHold < 0.1) return uv;
+        
+        // Create rolling effect - lines shift at different rates
+        float rollSpeed = 0.5 + horizontalHold * 2.0;
+        
+        // Offset horizontal roll by vertical position
+        // This creates a more distorted rolling effect with a diagonal shift
+        float roll1 = uv.y + time * rollSpeed;
+
+        float vertRollModifier = 0.01;
+        float totalRoll = roll1 * vertRollModifier;
+
+        uv.x += totalRoll;
+        
+        // Wrap horizontal coordinates
+        uv.x = fract(uv.x);
+        
+        return uv;
+      }
+      
       void main() {
         // Barrel distortion
         vec2 uv = barrelDistortion(vUv);
@@ -66,10 +95,22 @@ export function setupCRTScene(
           gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // vignette
           return;
         }
+        
+        // Apply horizontal hold distortion
+        uv = horizontalHoldDistortion(uv, time);
+        
         vec3 color = texture2D(tDiffuse, uv).rgb;
+        
+        // Apply grayscale if enabled
+        if (grayscale > 0.0) {
+          float gray = dot(color, vec3(0.299, 0.587, 0.114));
+          color = vec3(gray);
+        }
+        
         // Scanlines
         float scanline = 0.85 + 0.15 * sin(3.14159 * vUv.y * resolution.y * 0.5 + time * 2.0);
         color *= scanline;
+
         // Simple vignette
         float vignette = smoothstep(0.8, 0.5, length(vUv - 0.5));
         color *= vignette;
@@ -80,6 +121,10 @@ export function setupCRTScene(
 
   const mesh = new THREE.Mesh(geometry, material);
   scene.add(mesh);
+
+  // Store reference to uniforms for external control
+  grayscaleUniform = material.uniforms.grayscale;
+  horizontalHoldUniform = material.uniforms.horizontalHold;
 
   // Handle resizing
   window.addEventListener("resize", () => {
@@ -99,4 +144,19 @@ export function setupCRTScene(
     renderer.render(scene, camera);
   }
   animate();
+}
+
+// Export function to control grayscale from outside
+export function setGrayscale(enabled: boolean) {
+  if (grayscaleUniform) {
+    grayscaleUniform.value = enabled ? 1.0 : 0.0;
+  }
+}
+
+// Export function to control horizontal hold from outside
+export function setHorizontalHold(holdValue: number) {
+  console.log("Setting horizontal hold to:", holdValue);
+  if (horizontalHoldUniform) {
+    horizontalHoldUniform.value = holdValue;
+  }
 }

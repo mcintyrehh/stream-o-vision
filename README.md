@@ -27,6 +27,7 @@ With this script running, you can develop directly from the mounted CircuitPytho
 - Skeuomorphic Design: https://en.wikipedia.org/wiki/Skeuomorph
 - https://codepen.io/meduzen/pen/zxbwRV 
     - scanline animation
+- Vertical hold drifting example: https://www.youtube.com/watch?v=TBTfEX6E0oM&ab_channel=Mike%27sAmateurArcadeMonitorRepair)
 
 ## TODOs/Brainstorming
 - update scanlines count to match NTSC 525 spec

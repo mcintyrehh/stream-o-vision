@@ -1,6 +1,6 @@
 import Hls from "hls.js";
 import { streams, type Stream } from "./streams";
-import { setupCRTScene as setUpCRTScene } from "./crt-threejs";
+import { setUpCRTScene, setGrayscale, setHorizontalHold as setHorizontalHoldShader } from "./crt-threejs";
 import "./styles.css";
 
 declare global {
@@ -22,7 +22,10 @@ let currentChannelIndex = 2;
 
 // let scanlinesEnabled = true;
 let grayscaleEnabled = false;
+let horizontalHoldLevel = 0;
 const VOLUME_INCREMENT = 5;
+const HORIZONTAL_HOLD_INCREMENT = 2;
+
 // Enable for WebGL CRT effect, disable for pure CSS effects
 const THREE_JS_ENABLED = true;
 
@@ -121,7 +124,26 @@ const setMuted = () => {
 
 const toggleGrayscale = () => {
   grayscaleEnabled = !grayscaleEnabled;
-  _video?.style.setProperty("--grayscaleLevel", grayscaleEnabled ? "1" : "0");
+
+  if (THREE_JS_ENABLED) {
+    // Use Three.js shader for grayscale effect
+    setGrayscale(grayscaleEnabled);
+  } else {
+    // Use CSS filter for grayscale effect
+    _video?.style.setProperty("--grayscaleLevel", grayscaleEnabled ? "1" : "0");
+  }
+
+  console.log("Grayscale toggled:", grayscaleEnabled);
+
+  // Also show feedback via text track
+  deleteActiveCues(_textTrack);
+  _textTrack.addCue(
+    new VTTCue(
+      _video.currentTime,
+      _video.currentTime + 2,
+      `Grayscale: ${grayscaleEnabled ? "On" : "Off"}`
+    )
+  );
 };
 
 const toggleScanlines = () => {
@@ -133,6 +155,26 @@ const toggleScanlines = () => {
     "Scanlines enabled:",
     _videoWrapper.classList.contains(scanlinesClass)
   );
+};
+
+const setHorizontalHold = (direction: "up" | "down") => {
+  const holdDiff = direction === "up" ? HORIZONTAL_HOLD_INCREMENT : -HORIZONTAL_HOLD_INCREMENT;
+  horizontalHoldLevel = horizontalHoldLevel + holdDiff;
+  
+  // Use Three.js shader for horizontal hold effect
+  setHorizontalHoldShader(horizontalHoldLevel);
+
+  // Also show feedback via text track
+  deleteActiveCues(_textTrack);
+  _textTrack.addCue(
+    new VTTCue(
+      _video.currentTime,
+      _video.currentTime + 2,
+      `Horizontal Hold: ${horizontalHoldLevel}`
+    )
+  );
+
+  console.log("Horizontal hold level:", horizontalHoldLevel);
 };
 
 // === Video Element and Overlay Setup ===
@@ -210,7 +252,7 @@ const init = () => {
 
   const wrapper = document.createElement("div");
   wrapper.classList.add(
-    "video-wrapper",
+    "video-wrapper"
     // scanlinesClass,
     // "crt-curved",
   );
@@ -218,7 +260,7 @@ const init = () => {
   const video = document.createElement("video");
   video.classList.add("grayscale", scanlinesClass);
   THREE_JS_ENABLED && video.classList.add("hidden-video");
-  
+
   video.muted = true;
 
   wrapper.appendChild(video);
@@ -246,7 +288,10 @@ const init = () => {
       <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
         <button class="toggle-grayscale">Toggle Grayscale</button>
         <button class="toggle-scanlines">Toggle Scanlines</button>
-        <button class="horizontal-hold">Horizontal Hold</button>
+        <span>
+          <button class="horizontal-hold-down">Horizontal Hold -</button>
+          <button class="horizontal-hold-up">Horizontal Hold +</button>
+        </span>
         <button class="vertical-hold">Vertical Hold</button>
       </div>
     </div>
@@ -274,6 +319,8 @@ const init = () => {
   addEventListeners(video, overlay);
   if (THREE_JS_ENABLED) {
     setUpCRTScene(video, wrapper);
+    setGrayscale(grayscaleEnabled);
+    setHorizontalHoldShader(horizontalHoldLevel);
     setUpTextTrackOverlay(video, wrapper);
   }
 };
@@ -298,7 +345,12 @@ const addEventListeners = (
   overlay
     .querySelector(".toggle-mute")
     ?.addEventListener("click", () => setMuted());
-
+  overlay
+    .querySelector(".horizontal-hold-up")
+    ?.addEventListener("click", () => setHorizontalHold("up"));
+  overlay
+    .querySelector(".horizontal-hold-down")
+    ?.addEventListener("click", () => setHorizontalHold("down"));
   const toggleGrayscaleButton = overlay.querySelector(
     ".toggle-grayscale"
   ) as HTMLButtonElement;
@@ -322,6 +374,7 @@ const addEventListeners = (
     ".toggle-scanlines"
   ) as HTMLButtonElement;
   scanlinesBtn.addEventListener("click", () => toggleScanlines());
+
 };
 
 init();

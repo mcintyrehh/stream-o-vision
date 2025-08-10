@@ -203,6 +203,14 @@ const setExtremeHorizontalMeltdown = (enabled: boolean) => {
   console.log("Extreme horizontal meltdown:", extremeHorizontalMeltdown);
 };
 
+const triggerPercussiveMaintenance = () => {
+  // Simulate a "percussive maintenance" effect
+  console.log("Triggering percussive maintenance!");
+  horizontalHoldLevel = 0; // Reset horizontal hold
+  setHorizontalHoldShader(horizontalHoldLevel);
+  setExtremeHorizontalMeltdown(false); // Disable meltdown effect
+};
+
 // === Video Element and Overlay Setup ===
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
   // Remove all existing cues from all caption tracks
@@ -317,9 +325,9 @@ const init = () => {
         <span>
           <button class="horizontal-hold-down">Horizontal Hold -</button>
           <button class="horizontal-hold-up">Horizontal Hold +</button>
-          <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
-        </span>
-        <button class="vertical-hold">Vertical Hold</button>
+          </span>
+        <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
+        <button class="percussive-maintenance">Percussive Maintenance</button>
       </div>
     </div>
   `;
@@ -381,6 +389,9 @@ const addEventListeners = (
     ?.addEventListener("click", () =>
       setExtremeHorizontalMeltdown(!extremeHorizontalMeltdown)
     );
+  overlay
+    .querySelector(".percussive-maintenance")
+    ?.addEventListener("click", () => triggerPercussiveMaintenance());
 
   const toggleGrayscaleButton = overlay.querySelector(
     ".toggle-grayscale"

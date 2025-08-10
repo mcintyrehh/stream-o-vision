@@ -211,9 +211,8 @@ const init = () => {
   const wrapper = document.createElement("div");
   wrapper.classList.add(
     "video-wrapper",
-    scanlinesClass,
+    // scanlinesClass,
     // "crt-curved",
-    "horizontal-hold"
   );
 
   const video = document.createElement("video");
@@ -228,28 +227,27 @@ const init = () => {
   _videoWrapper = wrapper;
   window._video = video;
 
-  // Add overlay with arrow controls and toggles, plus channel/volume/mute controls
+  // Add debug overlay with channel/volume/mute, and feature controls
   const overlay = document.createElement("div");
   overlay.className = "video-overlay";
   overlay.innerHTML = `
-    <div class="arrow-controls">
+    <div class="debug-controls">
       <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
-        <button class="channel-up">Channel Up</button>
+        <span>
         <button class="channel-down">Channel Down</button>
-        <button class="volume-up">Volume Up</button>
-        <button class="volume-down">Volume Down</button>
+          <button class="channel-up">Channel Up</button>
+        </span>
+        <span>
+          <button class="volume-down">Volume Down</button>
+          <button class="volume-up">Volume Up</button>
+        </span>
         <button class="toggle-mute">Toggle Mute</button>
       </div>
-      <button class="arrow arrow-up" aria-label="Up">&#8593;</button>
-      <div class="arrow-row">
-        <button class="arrow arrow-left" aria-label="Left">&#8592;</button>
-        <button class="arrow arrow-center" aria-label="Center">&#9679;</button>
-        <button class="arrow arrow-right" aria-label="Right">&#8594;</button>
-      </div>
-      <button class="arrow arrow-down" aria-label="Down">&#8595;</button>
       <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
         <button class="toggle-grayscale">Toggle Grayscale</button>
         <button class="toggle-scanlines">Toggle Scanlines</button>
+        <button class="horizontal-hold">Horizontal Hold</button>
+        <button class="vertical-hold">Vertical Hold</button>
       </div>
     </div>
   `;
@@ -300,24 +298,6 @@ const addEventListeners = (
   overlay
     .querySelector(".toggle-mute")
     ?.addEventListener("click", () => setMuted());
-
-  const handleArrowClick = (
-    direction: "up" | "down" | "left" | "right" | "center"
-  ) => {
-    deleteActiveCues(_textTrack);
-    _textTrack.addCue(
-      new VTTCue(
-        _video.currentTime,
-        _video.currentTime + 999,
-        `Arrow Pressed: ${direction}`
-      )
-    );
-  };
-  for (const direction of ["up", "down", "left", "right", "center"] as const) {
-    overlay
-      .querySelector(`.arrow-${direction}`)
-      ?.addEventListener("click", () => handleArrowClick(direction));
-  }
 
   const toggleGrayscaleButton = overlay.querySelector(
     ".toggle-grayscale"

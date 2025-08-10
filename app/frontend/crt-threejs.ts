@@ -10,8 +10,12 @@ export function setUpCRTScene(
   container: HTMLElement = document.body
 ) {
   // Create renderer
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  const renderer = new THREE.WebGLRenderer({
+    antialias: true,
+    alpha: true, // Enable transparency to show CSS background
+  });
   renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.domElement.classList.add("threejs-canvas"); // @todo: fix this so i can be more selective in the CSS
   container.appendChild(renderer.domElement);
 
   // Create scene and camera

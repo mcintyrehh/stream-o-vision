@@ -29,6 +29,12 @@ body {
   object-fit: contain;
   background-image: url('/tv-static.gif');
 }
+
+/* .threejs-canvas canvas @todo: get this working*/
+canvas {
+  background-image: url('/tv-static.gif');
+}
+
 .video-overlay {
   position: absolute;
   bottom: 2rem;

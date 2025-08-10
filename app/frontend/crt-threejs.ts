@@ -2,6 +2,7 @@ import * as THREE from "three";
 
 let grayscaleUniform: { value: number } | null = null;
 let horizontalHoldUniform: { value: number } = { value: 0.0 }; // Default to no hold
+let extremeHorizontalMeltdownUniform: { value: boolean } = { value: false }; // Default to no meltdown
 
 // Usage: Call setUpCRTScene(videoElement) after your video is loaded and playing
 export function setUpCRTScene(
@@ -42,6 +43,7 @@ export function setUpCRTScene(
       time: { value: 0 },
       grayscale: { value: 0.0 },
       horizontalHold: { value: 0.0 },
+      extremeHorizontalMeltdown: { value: false },
     },
     vertexShader: `
       varying vec2 vUv;
@@ -56,6 +58,7 @@ export function setUpCRTScene(
       uniform float time;
       uniform float grayscale;
       uniform float horizontalHold;
+      uniform bool extremeHorizontalMeltdown;
       varying vec2 vUv;
       
       // Barrel distortion
@@ -77,7 +80,7 @@ export function setUpCRTScene(
         // This creates a more distorted rolling effect with a diagonal shift
         float roll1 = uv.y + time * rollSpeed;
 
-        float vertRollModifier = 0.01;
+        float vertRollModifier = extremeHorizontalMeltdown ? 2.0 : 0.01;
         float totalRoll = roll1 * vertRollModifier;
 
         uv.x += totalRoll;
@@ -125,6 +128,8 @@ export function setUpCRTScene(
   // Store reference to uniforms for external control
   grayscaleUniform = material.uniforms.grayscale;
   horizontalHoldUniform = material.uniforms.horizontalHold;
+  extremeHorizontalMeltdownUniform =
+    material.uniforms.extremeHorizontalMeltdown;
 
   // Handle resizing
   window.addEventListener("resize", () => {
@@ -159,4 +164,8 @@ export function setHorizontalHold(holdValue: number) {
   if (horizontalHoldUniform) {
     horizontalHoldUniform.value = holdValue;
   }
+}
+
+export function setExtremeHorizontalMeltdown(enabled: boolean) {
+  extremeHorizontalMeltdownUniform.value = enabled;
 }

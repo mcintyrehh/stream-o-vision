@@ -1,6 +1,11 @@
 import Hls from "hls.js";
 import { streams, type Stream } from "./streams";
-import { setUpCRTScene, setGrayscale, setHorizontalHold as setHorizontalHoldShader } from "./crt-threejs";
+import {
+  setUpCRTScene,
+  setGrayscale,
+  setHorizontalHold as setHorizontalHoldShader,
+  setExtremeHorizontalMeltdown as setExtremeHorizontalMeltdownShader,
+} from "./crt-threejs";
 import "./styles.css";
 
 declare global {
@@ -23,6 +28,8 @@ let currentChannelIndex = 2;
 // let scanlinesEnabled = true;
 let grayscaleEnabled = false;
 let horizontalHoldLevel = 0;
+let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
+
 const VOLUME_INCREMENT = 5;
 const HORIZONTAL_HOLD_INCREMENT = 2;
 
@@ -158,9 +165,10 @@ const toggleScanlines = () => {
 };
 
 const setHorizontalHold = (direction: "up" | "down") => {
-  const holdDiff = direction === "up" ? HORIZONTAL_HOLD_INCREMENT : -HORIZONTAL_HOLD_INCREMENT;
+  const holdDiff =
+    direction === "up" ? HORIZONTAL_HOLD_INCREMENT : -HORIZONTAL_HOLD_INCREMENT;
   horizontalHoldLevel = horizontalHoldLevel + holdDiff;
-  
+
   // Use Three.js shader for horizontal hold effect
   setHorizontalHoldShader(horizontalHoldLevel);
 
@@ -175,6 +183,24 @@ const setHorizontalHold = (direction: "up" | "down") => {
   );
 
   console.log("Horizontal hold level:", horizontalHoldLevel);
+};
+
+const setExtremeHorizontalMeltdown = (enabled: boolean) => {
+  extremeHorizontalMeltdown = enabled;
+
+  setExtremeHorizontalMeltdownShader(extremeHorizontalMeltdown);
+
+  // Also show feedback via text track
+  deleteActiveCues(_textTrack);
+  _textTrack.addCue(
+    new VTTCue(
+      _video.currentTime,
+      _video.currentTime + 2,
+      `Extreme Horizontal Meltdown: ${extremeHorizontalMeltdown ? "On" : "Off"}`
+    )
+  );
+
+  console.log("Extreme horizontal meltdown:", extremeHorizontalMeltdown);
 };
 
 // === Video Element and Overlay Setup ===
@@ -291,6 +317,7 @@ const init = () => {
         <span>
           <button class="horizontal-hold-down">Horizontal Hold -</button>
           <button class="horizontal-hold-up">Horizontal Hold +</button>
+          <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
         </span>
         <button class="vertical-hold">Vertical Hold</button>
       </div>
@@ -319,8 +346,6 @@ const init = () => {
   addEventListeners(video, overlay);
   if (THREE_JS_ENABLED) {
     setUpCRTScene(video, wrapper);
-    setGrayscale(grayscaleEnabled);
-    setHorizontalHoldShader(horizontalHoldLevel);
     setUpTextTrackOverlay(video, wrapper);
   }
 };
@@ -351,6 +376,12 @@ const addEventListeners = (
   overlay
     .querySelector(".horizontal-hold-down")
     ?.addEventListener("click", () => setHorizontalHold("down"));
+  overlay
+    .querySelector(".extreme-horizontal-meltdown")
+    ?.addEventListener("click", () =>
+      setExtremeHorizontalMeltdown(!extremeHorizontalMeltdown)
+    );
+
   const toggleGrayscaleButton = overlay.querySelector(
     ".toggle-grayscale"
   ) as HTMLButtonElement;
@@ -374,7 +405,6 @@ const addEventListeners = (
     ".toggle-scanlines"
   ) as HTMLButtonElement;
   scanlinesBtn.addEventListener("click", () => toggleScanlines());
-
 };
 
 init();

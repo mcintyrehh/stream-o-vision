@@ -5,6 +5,8 @@ import {
   setGrayscale,
   setHorizontalHold as setHorizontalHoldShader,
   setExtremeHorizontalMeltdown as setExtremeHorizontalMeltdownShader,
+  clearCRTRenderer,
+  resumeCRTRenderer,
 } from "./crt-threejs";
 import "./styles.css";
 
@@ -32,6 +34,8 @@ let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
 
 const VOLUME_INCREMENT = 5;
 const HORIZONTAL_HOLD_INCREMENT = 2;
+// seconds to delay between stream changes for maximum static gif effect
+const STREAM_CHANGE_DELAY_SECONDS = 1;
 
 // Enable for WebGL CRT effect, disable for pure CSS effects
 const THREE_JS_ENABLED = true;
@@ -91,11 +95,27 @@ const handleWSMessage = (data: string) => {
 };
 
 // === Channel, Volume, and Mute Controls ===
-const setChannel = (channel: number) => {
+const setChannel = async (channel: number) => {
   currentChannelIndex = channel;
+  
+  // Pause the video to prevent old content from showing
+  _video.pause();
+  
+  // Make sure we wait for at least the stream change delay before resuming rendering for maximum static gif effect
+  const streamDelayPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), STREAM_CHANGE_DELAY_SECONDS * 1000));
+
+  // Clear the WebGL renderer to show static background during channel change
+  if (THREE_JS_ENABLED) {
+    clearCRTRenderer();
+  }
+
   hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
-  hls.once(Hls.Events.MANIFEST_PARSED, function () {
+  hls.once(Hls.Events.MANIFEST_PARSED, async function () {
+    await streamDelayPromise;
+    resumeCRTRenderer();
     addTextTrackToVideoElement(_video);
+    // Resume video playback
+    _video.play();
   });
 };
 

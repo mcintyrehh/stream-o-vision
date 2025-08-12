@@ -6,6 +6,8 @@ import fragmentShader from "./shaders/crt_frag.glsl?raw";
 let grayscaleUniform: { value: number } | null = null;
 let horizontalHoldUniform: { value: number } = { value: 0.0 }; // Default to no hold
 let extremeHorizontalMeltdownUniform: { value: boolean } = { value: false }; // Default to no meltdown
+let crtRenderer: THREE.WebGLRenderer | null = null;
+let shouldRender = true;
 
 // Usage: Call setUpCRTScene(videoElement) after your video is loaded and playing
 export function setUpCRTScene(
@@ -15,11 +17,14 @@ export function setUpCRTScene(
   // Create renderer
   const renderer = new THREE.WebGLRenderer({
     antialias: true,
-    alpha: true, // Enable transparency to show CSS background
+    alpha: true, // Enable transparency to show CSS background gif
   });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.domElement.classList.add("threejs-canvas"); // @todo: fix this so i can be more selective in the CSS
   container.appendChild(renderer.domElement);
+
+  // Store reference to renderer for external access
+  crtRenderer = renderer;
 
   // Create scene and camera
   const scene = new THREE.Scene();
@@ -81,7 +86,10 @@ export function setUpCRTScene(
   function animate() {
     material.uniforms.time.value = performance.now() / 1000.0;
     requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+
+    if (shouldRender) {
+      renderer.render(scene, camera);
+    }
   }
   animate();
 }
@@ -103,4 +111,17 @@ export function setHorizontalHold(holdValue: number) {
 
 export function setExtremeHorizontalMeltdown(enabled: boolean) {
   extremeHorizontalMeltdownUniform.value = enabled;
+}
+
+// Export function to clear the renderer (useful for channel changes)
+export function clearCRTRenderer() {
+  if (crtRenderer) {
+    crtRenderer.clear();
+  }
+  shouldRender = false;
+}
+
+// Export function to resume rendering
+export function resumeCRTRenderer() {
+  shouldRender = true;
 }

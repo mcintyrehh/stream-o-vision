@@ -8,16 +8,19 @@ varying vec2 vUv;
 
 // Barrel distortion
 vec2 barrelDistortion(vec2 coord) {
-  vec2 cc = coord - 0.5;
-  float dist = dot(cc, cc);
-  cc *= 1.0 + 0.25 * dist;
-  return cc + 0.5;
+  vec2 center_coord = coord - 0.5;
+  // squared distance from center point
+  float dist = dot(center_coord, center_coord);
+  // apply distortion relative to distance
+  center_coord *= 1.0 + 0.25 * dist;
+  // convert back to UV space
+  return center_coord + 0.5;
 }
 
 // Horizontal hold distortion
 vec2 horizontalHoldDistortion(vec2 uv, float time) {
   if (horizontalHold < 0.1) return uv;
-  
+
   // Create rolling effect - lines shift at different rates
   float rollSpeed = 0.5 + horizontalHold * 2.0;
   
@@ -40,7 +43,7 @@ void main() {
   // Barrel distortion
   vec2 uv = barrelDistortion(vUv);
   if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
-    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); // vignette
+    // remove out of bounds pixels to achieve rounded corner effect
     return;
   }
   

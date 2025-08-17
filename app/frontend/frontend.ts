@@ -5,6 +5,7 @@ import {
   setGrayscale,
   setHorizontalHold as setHorizontalHoldShader,
   setExtremeHorizontalMeltdown as setExtremeHorizontalMeltdownShader,
+  setBarrelDistortion as setBarrelDistortionShader,
   clearCRTRenderer,
   resumeCRTRenderer,
 } from "./crt-threejs";
@@ -31,6 +32,7 @@ let currentChannelIndex = 2;
 let grayscaleEnabled = false;
 let horizontalHoldLevel = 0;
 let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
+let barrelDistortionEnabled = false; // For barrel distortion effect
 
 const VOLUME_INCREMENT = 5;
 const HORIZONTAL_HOLD_INCREMENT = 2;
@@ -89,6 +91,9 @@ const handleWSMessage = (data: string) => {
     case "scanlines":
       toggleScanlines();
       break;
+    case "barrel_distortion":
+      toggleBarrelDistortion();
+      break;
     default:
       return;
   }
@@ -97,12 +102,14 @@ const handleWSMessage = (data: string) => {
 // === Channel, Volume, and Mute Controls ===
 const setChannel = async (channel: number) => {
   currentChannelIndex = channel;
-  
+
   // Pause the video to prevent old content from showing
   _video.pause();
-  
+
   // Make sure we wait for at least the stream change delay before resuming rendering for maximum static gif effect
-  const streamDelayPromise = new Promise<void>((resolve) => setTimeout(() => resolve(), STREAM_CHANGE_DELAY_SECONDS * 1000));
+  const streamDelayPromise = new Promise<void>((resolve) =>
+    setTimeout(() => resolve(), STREAM_CHANGE_DELAY_SECONDS * 1000)
+  );
 
   // Clear the WebGL renderer to show static background during channel change
   if (THREE_JS_ENABLED) {
@@ -231,6 +238,13 @@ const triggerPercussiveMaintenance = () => {
   setExtremeHorizontalMeltdown(false); // Disable meltdown effect
 };
 
+const toggleBarrelDistortion = () => {
+  // Simulate a "barrel distortion" effect
+  console.log("Toggling barrel distortion!");
+  barrelDistortionEnabled = !barrelDistortionEnabled;
+  setBarrelDistortionShader(barrelDistortionEnabled);
+};
+
 // === Video Element and Overlay Setup ===
 const addTextTrackToVideoElement = (videoEl: HTMLVideoElement) => {
   // Remove all existing cues from all caption tracks
@@ -348,6 +362,7 @@ const init = () => {
           </span>
         <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
         <button class="percussive-maintenance">Percussive Maintenance</button>
+        <button class="barrel-distortion">Barrel Distortion</button>
       </div>
     </div>
   `;
@@ -412,6 +427,12 @@ const addEventListeners = (
   overlay
     .querySelector(".percussive-maintenance")
     ?.addEventListener("click", () => triggerPercussiveMaintenance());
+  overlay
+    .querySelector(".toggle-scanlines")
+    ?.addEventListener("click", () => toggleScanlines());
+  overlay
+    .querySelector(".barrel-distortion")
+    ?.addEventListener("click", () => toggleBarrelDistortion());
 
   const toggleGrayscaleButton = overlay.querySelector(
     ".toggle-grayscale"
@@ -431,11 +452,6 @@ const addEventListeners = (
   };
   const resizeObserver = new ResizeObserver(updateScanlineHeight);
   resizeObserver.observe(_video);
-
-  const scanlinesBtn = overlay.querySelector(
-    ".toggle-scanlines"
-  ) as HTMLButtonElement;
-  scanlinesBtn.addEventListener("click", () => toggleScanlines());
 };
 
 init();

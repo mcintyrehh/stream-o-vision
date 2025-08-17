@@ -6,7 +6,7 @@ class OnOffSwitch():
     def __init__(self, pin, switch_name):
         self.switch = digitalio.DigitalInOut(pin)
         self.switch.direction = digitalio.Direction.INPUT
-        self.switch.pull = digitalio.Pull.UP
+        self.switch.pull = digitalio.Pull.DOWN
 
         self.switch_name = switch_name
         self.cached_switch_value = self.switch.value
@@ -14,8 +14,7 @@ class OnOffSwitch():
 
     @property
     def is_on(self):
-        # Pull-up resistors mean that the switch is "on" when the value is False
-        return not self.switch.value 
+        return self.switch.value 
 
     def read_switch(self):
         new_switch_value = self.is_on

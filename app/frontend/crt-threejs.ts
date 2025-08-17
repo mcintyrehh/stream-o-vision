@@ -4,8 +4,10 @@ import vertexShader from "./shaders/crt_vert.glsl?raw";
 import fragmentShader from "./shaders/crt_frag.glsl?raw";
 
 let grayscaleUniform: { value: number } | null = null;
-let horizontalHoldUniform: { value: number } = { value: 0.0 }; // Default to no hold
-let extremeHorizontalMeltdownUniform: { value: boolean } = { value: false }; // Default to no meltdown
+let horizontalHoldUniform: { value: number } = { value: 0.0 };
+let extremeHorizontalMeltdownUniform: { value: boolean } = { value: false };
+let barrelDistortionUniform: { value: boolean } = { value: false };
+let scanlinesUniform: { value: boolean } = { value: false };
 let crtRenderer: THREE.WebGLRenderer | null = null;
 let shouldRender = true;
 
@@ -57,6 +59,8 @@ export function setUpCRTScene(
       grayscale: { value: 0.0 },
       horizontalHold: { value: 0.0 },
       extremeHorizontalMeltdown: { value: false },
+      barrelDistortion: { value: false },
+      scanlines: { value: false },
     },
     vertexShader,
     fragmentShader,
@@ -70,6 +74,8 @@ export function setUpCRTScene(
   horizontalHoldUniform = material.uniforms.horizontalHold;
   extremeHorizontalMeltdownUniform =
     material.uniforms.extremeHorizontalMeltdown;
+  barrelDistortionUniform = material.uniforms.barrelDistortion;
+  scanlinesUniform = material.uniforms.scanlines;
 
   // Handle resizing
   window.addEventListener("resize", () => {
@@ -111,6 +117,14 @@ export function setHorizontalHold(holdValue: number) {
 
 export function setExtremeHorizontalMeltdown(enabled: boolean) {
   extremeHorizontalMeltdownUniform.value = enabled;
+}
+
+export function setBarrelDistortion(enabled: boolean) {
+  barrelDistortionUniform.value = enabled;
+}
+
+export function setScanlines(enabled: boolean) {
+  scanlinesUniform.value = enabled;
 }
 
 // Export function to clear the renderer (useful for channel changes)

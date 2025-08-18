@@ -11,6 +11,8 @@ class OnOffSwitch():
         self.switch_name = switch_name
         self.cached_switch_value = self.switch.value
         print(f"Initialized switch {self.switch_name} on pin {pin}")
+        # send initial value so UI can represent the hardware state
+        self.send_serial_data()
 
     @property
     def is_on(self):
@@ -20,6 +22,8 @@ class OnOffSwitch():
         new_switch_value = self.is_on
         if new_switch_value != self.cached_switch_value:
             self.cached_switch_value = new_switch_value
-            switch_state = "on" if new_switch_value else "off"
+            self.send_serial_data()
 
-            print(f"sensor:{self.switch_name}:{switch_state}")
+    def send_serial_data(self):
+        switch_state = "on" if self.cached_switch_value else "off"
+        print(f"sensor:{self.switch_name}:{switch_state}")

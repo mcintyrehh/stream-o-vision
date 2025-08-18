@@ -120,10 +120,12 @@ export function setExtremeHorizontalMeltdown(enabled: boolean) {
 }
 
 export function setBarrelDistortion(enabled: boolean) {
+  console.log("Setting barrel distortion to:", enabled);
   barrelDistortionUniform.value = enabled;
 }
 
 export function setScanlines(enabled: boolean) {
+  console.log("Setting scanlines to:", enabled);
   scanlinesUniform.value = enabled;
 }
 

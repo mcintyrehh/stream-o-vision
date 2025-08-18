@@ -5,6 +5,7 @@ uniform float grayscale;
 uniform float horizontalHold;
 uniform bool extremeHorizontalMeltdown;
 uniform bool barrelDistortion;
+uniform bool scanlines;
 varying vec2 vUv;
 
 // Barrel distortion
@@ -20,6 +21,7 @@ vec2 applyBarrelDistortion(vec2 coord) {
 
 // Horizontal hold distortion
 vec2 horizontalHoldDistortion(vec2 uv, float time) {
+  
   if (horizontalHold < 0.1) return uv;
 
   // Create rolling effect - lines shift at different rates
@@ -42,22 +44,21 @@ vec2 horizontalHoldDistortion(vec2 uv, float time) {
 
 void main() {
   vec2 uv = vUv;
-  vec3 color = texture2D(tDiffuse, uv).rgb;
-
-  // Barrel distortion
+  
+  // Apply barrel distortion first if enabled
   if (barrelDistortion) {
     uv = applyBarrelDistortion(uv);
     if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
       // remove out of bounds pixels to achieve rounded corner effect
       return;
     }
-    // Simple vignette
-    float vignette = smoothstep(0.8, 0.5, length(vUv - 0.5));
-    color *= vignette;
   }
   
   // Apply horizontal hold distortion
   uv = horizontalHoldDistortion(uv, time);
+  
+  // Sample texture with distorted UV coordinates
+  vec3 color = texture2D(tDiffuse, uv).rgb;
   
   // Apply grayscale if enabled
   if (grayscale > 0.0) {
@@ -65,10 +66,17 @@ void main() {
     color = vec3(gray);
   }
   
-  // // Scanlines
-  float scanline = 0.85 + 0.15 * sin(3.14159 * vUv.y * resolution.y * 0.5 + time * 2.0);
-  color *= scanline;
+  // Scanlines
+  if (scanlines) {
+    float scanline = 0.85 + 0.15 * sin(3.14159 * vUv.y * resolution.y * 0.5 + time * 2.0);
+    color *= scanline;
+  }
 
+  // Simple vignette
+  if (barrelDistortion) {
+    float vignette = smoothstep(0.8, 0.5, length(vUv - 0.5));
+    color *= vignette;
+  }
 
   gl_FragColor = vec4(color, 1.0);
 }

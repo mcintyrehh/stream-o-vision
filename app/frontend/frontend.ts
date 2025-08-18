@@ -6,6 +6,7 @@ import {
   setHorizontalHold as setHorizontalHoldShader,
   setExtremeHorizontalMeltdown as setExtremeHorizontalMeltdownShader,
   setBarrelDistortion as setBarrelDistortionShader,
+  setScanlines as setScanlinesShader,
   clearCRTRenderer,
   resumeCRTRenderer,
 } from "./crt-threejs";
@@ -33,6 +34,7 @@ let grayscaleEnabled = false;
 let horizontalHoldLevel = 0;
 let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
 let barrelDistortionEnabled = false; // For barrel distortion effect
+let scanlinesEnabled = false;
 
 const VOLUME_INCREMENT = 5;
 const HORIZONTAL_HOLD_INCREMENT = 2;
@@ -181,14 +183,17 @@ const toggleGrayscale = () => {
 };
 
 const toggleScanlines = () => {
-  _videoWrapper.classList.toggle(scanlinesClass);
-  const scanlineHeight = _video.clientHeight / 486; // 486 is the height of NTSC video
-  console.log("Setting scanline height to:", scanlineHeight);
-  _videoWrapper.style.setProperty("--scanlineHeight", scanlineHeight + "px");
+  // _videoWrapper.classList.toggle(scanlinesClass);
+  // const scanlineHeight = _video.clientHeight / 486; // 486 is the height of NTSC video
+  // console.log("Setting scanline height to:", scanlineHeight);
+  // _videoWrapper.style.setProperty("--scanlineHeight", scanlineHeight + "px");
   console.log(
     "Scanlines enabled:",
     _videoWrapper.classList.contains(scanlinesClass)
   );
+
+  scanlinesEnabled = !scanlinesEnabled;
+  setScanlinesShader(scanlinesEnabled);
 };
 
 const setHorizontalHold = (direction: "up" | "down") => {

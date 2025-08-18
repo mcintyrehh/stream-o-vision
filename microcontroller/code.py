@@ -27,7 +27,7 @@ volume_controller = VolumeController(vol_button_pin, vol_enc_a_pin, vol_enc_b_pi
 
 # "Feature" Switches 
 grayscale_switch = OnOffSwitch(grayscale_switch_pin, "grayscale")
-scanline_switch = OnOffSwitch(scanline_switch_pin, "scanline")
+scanline_switch = OnOffSwitch(scanline_switch_pin, "scanlines")
 barrel_distortion_switch = OnOffSwitch(barrel_distortion_switch_pin, "barrel_distortion")
 horizontal_hold_switch = OnOffSwitch(horizontal_hold_switch_pin, "horizontal_hold")
 

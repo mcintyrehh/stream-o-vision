@@ -132,3 +132,5 @@ dist
 *.code-workspace
 .vscode
 stream-o-vision.code-workspace
+
+./app/frontend/streams.ts

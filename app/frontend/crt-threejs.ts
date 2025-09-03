@@ -5,6 +5,7 @@ import fragmentShader from "./shaders/crt_frag.glsl?raw";
 
 let grayscaleUniform: { value: number } | null = null;
 let horizontalHoldUniform: { value: number } = { value: 0.0 };
+let verticalHoldUniform: { value: number } = { value: 0.0 };
 let extremeHorizontalMeltdownUniform: { value: boolean } = { value: false };
 let barrelDistortionUniform: { value: boolean } = { value: false };
 let scanlinesUniform: { value: boolean } = { value: false };
@@ -58,6 +59,7 @@ export function setUpCRTScene(
       time: { value: 0 },
       grayscale: { value: 0.0 },
       horizontalHold: { value: 0.0 },
+      verticalHold: { value: 0.0 },
       extremeHorizontalMeltdown: { value: false },
       barrelDistortion: { value: false },
       scanlines: { value: false },
@@ -72,6 +74,7 @@ export function setUpCRTScene(
   // Store reference to uniforms for external control
   grayscaleUniform = material.uniforms.grayscale;
   horizontalHoldUniform = material.uniforms.horizontalHold;
+  verticalHoldUniform = material.uniforms.verticalHold;
   extremeHorizontalMeltdownUniform =
     material.uniforms.extremeHorizontalMeltdown;
   barrelDistortionUniform = material.uniforms.barrelDistortion;
@@ -112,6 +115,13 @@ export function setHorizontalHold(holdValue: number) {
   console.log("Setting horizontal hold to:", holdValue);
   if (horizontalHoldUniform) {
     horizontalHoldUniform.value = holdValue;
+  }
+}
+
+export function setVerticalHold(holdValue: number) {
+  console.log("Setting vertical hold to:", holdValue);
+  if (verticalHoldUniform) {
+    verticalHoldUniform.value = holdValue;
   }
 }
 

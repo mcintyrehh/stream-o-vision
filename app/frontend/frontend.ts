@@ -4,6 +4,7 @@ import {
   setUpCRTScene,
   setGrayscale,
   setHorizontalHold as setHorizontalHoldShader,
+  setVerticalHold as setVerticalHoldShader,
   setExtremeHorizontalMeltdown as setExtremeHorizontalMeltdownShader,
   setBarrelDistortion as setBarrelDistortionShader,
   setScanlines as setScanlinesShader,
@@ -32,12 +33,13 @@ let currentChannelIndex = 2;
 // let scanlinesEnabled = true;
 let grayscaleEnabled = false;
 let horizontalHoldLevel = 0;
+let verticalHoldLevel = 0;
 let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
 let barrelDistortionEnabled = false; // For barrel distortion effect
 let scanlinesEnabled = false;
 
 const VOLUME_INCREMENT = 5;
-const HORIZONTAL_HOLD_INCREMENT = 2;
+const HOLD_INCREMENT = 2;
 // seconds to delay between stream changes for maximum static gif effect
 const STREAM_CHANGE_DELAY_SECONDS = 1;
 
@@ -70,6 +72,7 @@ const deleteActiveCues = (textTrack: TextTrack) => {
 const socket = new WebSocket("ws://localhost:3000");
 socket.onopen = () => {
   socket.send("Hello, its ya boy Henry");
+  socket.send("Web app running on http://localhost:1338/index.html");
 };
 socket.onmessage = (event) => handleWSMessage(event.data);
 
@@ -198,7 +201,7 @@ const toggleScanlines = () => {
 
 const setHorizontalHold = (direction: "up" | "down") => {
   const holdDiff =
-    direction === "up" ? HORIZONTAL_HOLD_INCREMENT : -HORIZONTAL_HOLD_INCREMENT;
+    direction === "up" ? HOLD_INCREMENT : -HOLD_INCREMENT;
   horizontalHoldLevel = horizontalHoldLevel + holdDiff;
 
   // Use Three.js shader for horizontal hold effect
@@ -215,6 +218,27 @@ const setHorizontalHold = (direction: "up" | "down") => {
   );
 
   console.log("Horizontal hold level:", horizontalHoldLevel);
+};
+
+const setVerticalHold = (direction: "up" | "down") => {
+  const holdDiff =
+    direction === "up" ? HOLD_INCREMENT : -HOLD_INCREMENT;
+  verticalHoldLevel = verticalHoldLevel + holdDiff;
+
+  // Use Three.js shader for vertical hold effect
+  setVerticalHoldShader(verticalHoldLevel);
+
+  // Also show feedback via text track
+  deleteActiveCues(_textTrack);
+  _textTrack.addCue(
+    new VTTCue(
+      _video.currentTime,
+      _video.currentTime + 2,
+      `Vertical Hold: ${verticalHoldLevel}`
+    )
+  );
+
+  console.log("Vertical hold level:", verticalHoldLevel);
 };
 
 const setExtremeHorizontalMeltdown = (enabled: boolean) => {
@@ -239,7 +263,9 @@ const triggerPercussiveMaintenance = () => {
   // Simulate a "percussive maintenance" effect
   console.log("Triggering percussive maintenance!");
   horizontalHoldLevel = 0; // Reset horizontal hold
+  verticalHoldLevel = 0; // Reset vertical hold
   setHorizontalHoldShader(horizontalHoldLevel);
+  setVerticalHoldShader(verticalHoldLevel);
   setExtremeHorizontalMeltdown(false); // Disable meltdown effect
 };
 
@@ -364,7 +390,11 @@ const init = () => {
         <span>
           <button class="horizontal-hold-down">Horizontal Hold -</button>
           <button class="horizontal-hold-up">Horizontal Hold +</button>
-          </span>
+        </span>
+        <span>
+          <button class="vertical-hold-down">Vertical Hold -</button>
+          <button class="vertical-hold-up">Vertical Hold +</button>
+        </span>
         <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
         <button class="percussive-maintenance">Percussive Maintenance</button>
         <button class="barrel-distortion">Barrel Distortion</button>
@@ -424,6 +454,12 @@ const addEventListeners = (
   overlay
     .querySelector(".horizontal-hold-down")
     ?.addEventListener("click", () => setHorizontalHold("down"));
+  overlay
+    .querySelector(".vertical-hold-up")
+    ?.addEventListener("click", () => setVerticalHold("up"));
+  overlay
+    .querySelector(".vertical-hold-down")
+    ?.addEventListener("click", () => setVerticalHold("down"));
   overlay
     .querySelector(".extreme-horizontal-meltdown")
     ?.addEventListener("click", () =>

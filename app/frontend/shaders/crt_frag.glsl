@@ -1,8 +1,10 @@
+const float DRAW_BLACK = -999.0;
 uniform sampler2D tDiffuse;
 uniform vec2 resolution;
 uniform float time;
 uniform float grayscale;
 uniform float horizontalHold;
+uniform float verticalHold;
 uniform bool extremeHorizontalMeltdown;
 uniform bool barrelDistortion;
 uniform bool scanlines;
@@ -42,6 +44,28 @@ vec2 horizontalHoldDistortion(vec2 uv, float time) {
   return uv;
 }
 
+// Vertical hold distortion
+vec2 verticalHoldDistortion(vec2 uv, float time, vec4 fragColor) {
+
+  if (verticalHold < 0.1) return uv;
+
+  // NTSC: 525 total scan lines lines, 486 make up the visible raster
+  // We'll apply this proportion to any video resolution
+  float visibleRatio = 486.0 / 525.0;
+  float visibleStart = (1.0 - visibleRatio) / 2.0;
+  float visibleEnd = 1.0 - visibleStart;
+
+  // Vertical hold rolling effect
+  uv.y += 0.1 * time * verticalHold / 2.0;
+  uv.y = fract(uv.y);
+    if (uv.y < visibleStart || uv.y > visibleEnd) {
+      fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+      uv.x = DRAW_BLACK; // signal to main to blank color
+  }
+
+  return uv;
+}
+
 void main() {
   vec2 uv = vUv;
   
@@ -56,16 +80,24 @@ void main() {
   
   // Apply horizontal hold distortion
   uv = horizontalHoldDistortion(uv, time);
-  
+  // Apply vertical hold distortion
+  uv = verticalHoldDistortion(uv, time, gl_FragColor);
+
+  // If verticalHoldDistortion signaled black bar, blank color
+    if (uv.x == DRAW_BLACK) {
+    gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
+
   // Sample texture with distorted UV coordinates
   vec3 color = texture2D(tDiffuse, uv).rgb;
-  
+
   // Apply grayscale if enabled
   if (grayscale > 0.0) {
     float gray = dot(color, vec3(0.299, 0.587, 0.114));
     color = vec3(gray);
   }
-  
+
   // Scanlines
   if (scanlines) {
     float scanline = 0.85 + 0.15 * sin(3.14159 * vUv.y * resolution.y * 0.5 + time * 2.0);

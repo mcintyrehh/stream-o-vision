@@ -7,6 +7,7 @@ import { SerialPort } from "serialport";
 import { WebSocketServer } from "ws";
 
 console.log("os.type(): ", os.type());
+console.log("Web app running on http://localhost:1338/index.html");
 
 const portPath = os.type() === "Windows_NT" ? "COM3" : "/dev/ttyACM0";
 
@@ -40,7 +41,6 @@ wss.on("connection", (socket) => {
     console.log("message: ", message.toString());
   });
 });
-// console.log("wssSocket: ", wssSocket);
 
 // Spin up HLS proxy server to get around CORS/Origin, Referer HTTP request headers
 console.log("Starting HLS proxy server...");

@@ -2,19 +2,21 @@
 	"name": "stream-o-vision",
 	"version": "1.0.0",
 	"description": "",
-	"main": "main.js",
+	"main": "dist/src/main.js",
 	"engines": {
 		"node": ">=16.16.0",
 		"npm": ">=3.0.0"
 	},
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"debug": "nodemon -e js,ts --watch app --watch frontend --watch static --exec \"npm run build:ts && npm run start:app\"",
-		"build:ts": "node_modules/.bin/tsc && cp -r app/static dist/static",
-		"start:app": "node dist/src/main",
-		"start": "npm run debug",
-		"dev": "concurrently \"vite\" \"npm run start:app\"",
-		"build": "npm run build:ts && vite build",
+		"build:backend": "tsc",
+		"build:frontend": "vite build",
+		"build": "npm run build:backend && npm run build:frontend",
+		"start:backend": "node dist/src/main.js",
+		"start:proxy": "node app/backend/hls-proxy.js",
+		"dev:backend": "tsc --watch",
+		"dev:frontend": "vite",
+		"dev": "concurrently \"npm run start:backend\" \"npm run start:proxy\" \"npm run dev:frontend\"",
 		"preview": "vite preview"
 	},
 	"repository": {

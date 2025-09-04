@@ -1,6 +1,12 @@
 import Hls from "hls.js";
-import { streams, type Stream } from "./streams";
+import { streams } from "./streams";
 import { createDebugOverlay } from "./debug-overlay";
+import {
+  getHlsProxyUrl,
+  createChannelInfoText,
+  deleteActiveCues,
+  setUpTextTrackOverlay,
+} from "./utils";
 import {
   setUpCRTScene,
   setGrayscaleShader,
@@ -19,6 +25,7 @@ declare global {
     _video: HTMLVideoElement;
   }
 }
+type VolumeDirection = "up" | "down";
 
 // === Constants and State ===
 const VOLUME_INCREMENT = 5;
@@ -38,43 +45,12 @@ let verticalHoldLevel = 0;
 let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
 let barrelDistortionEnabled = false; // For barrel distortion effect
 let scanlinesEnabled = false;
-let webcamModeEnabled = true;
-
-const VOLUME_INCREMENT = 5;
-const HOLD_INCREMENT = 2;
-// seconds to delay between stream changes for maximum static gif effect
-const STREAM_CHANGE_DELAY_SECONDS = 1;
-
-// Enable for WebGL CRT effect, disable for pure CSS effects
-const THREE_JS_ENABLED = true;
-
-// === Utility Functions ===
-const proxyURLFromStreamIndex = (streamIndex: number) => {
-  const proxy_url = "http://127.0.0.1:8182";
-  const referer_url = "https://www.earthcam.com/";
-  const file_extension = ".m3u8";
-  return `${proxy_url}/${btoa(
-    `${streams[streamIndex].streamUrl}|${referer_url}`
-  )}${file_extension}`;
-};
-
-const createChannelInfoText = (
-  channelNumber: Stream["channelNumber"],
-  channelDescription: Stream["name"]
-) => `Channel ${channelNumber} - ${channelDescription}`;
-
-const deleteActiveCues = (textTrack: TextTrack) => {
-  const activeCues = textTrack.activeCues || [];
-  for (let i = 0; i < activeCues?.length || 0; i++) {
-    textTrack.removeCue(activeCues[i]);
-  }
-};
+let webcamModeEnabled = false;
 
 // === WebSocket Handling ===
 const socket = new WebSocket("ws://localhost:3000");
 socket.onopen = () => {
   socket.send("Hello, its ya boy Henry");
-  socket.send("Web app running on http://localhost:1338/index.html");
 };
 socket.onmessage = (event) => handleWSMessage(event.data);
 
@@ -119,11 +95,9 @@ const setChannel = async (channel: number) => {
   );
 
   // Clear the WebGL renderer to show static background during channel change
-  if (THREE_JS_ENABLED) {
-    clearCRTRenderer();
-  }
+  clearCRTRenderer();
 
-  hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
+  hls.loadSource(getHlsProxyUrl(streams[currentChannelIndex].streamUrl));
   hls.once(Hls.Events.MANIFEST_PARSED, async function () {
     await streamDelayPromise;
     resumeCRTRenderer();
@@ -186,15 +160,7 @@ const setMuted = () => {
 
 const toggleGrayscale = () => {
   grayscaleEnabled = !grayscaleEnabled;
-
-  if (THREE_JS_ENABLED) {
-    // Use Three.js shader for grayscale effect
-    setGrayscaleShader(grayscaleEnabled);
-  } else {
-    // Use CSS filter for grayscale effect
-    _video?.style.setProperty("--grayscaleLevel", grayscaleEnabled ? "1" : "0");
-  }
-
+  setGrayscaleShader(grayscaleEnabled);
   console.log("Grayscale toggled:", grayscaleEnabled);
 
   // Also show feedback via text track
@@ -209,17 +175,9 @@ const toggleGrayscale = () => {
 };
 
 const toggleScanlines = () => {
-  // _videoWrapper.classList.toggle(scanlinesClass);
-  // const scanlineHeight = _video.clientHeight / 486; // 486 is the height of NTSC video
-  // console.log("Setting scanline height to:", scanlineHeight);
-  // _videoWrapper.style.setProperty("--scanlineHeight", scanlineHeight + "px");
-  console.log(
-    "Scanlines enabled:",
-    _videoWrapper.classList.contains(scanlinesClass)
-  );
-
   scanlinesEnabled = !scanlinesEnabled;
   setScanlinesShader(scanlinesEnabled);
+  console.log(`Scanlines enabled: ${scanlinesEnabled}`);
 };
 
 const setHorizontalHold = (direction: "up" | "down") => {
@@ -329,52 +287,11 @@ const onChannelChange = (direction: "up" | "down") => {
   setChannel(newChannelIndex);
 };
 
-function setUpTextTrackOverlay(
-  video: HTMLVideoElement,
-  container: HTMLElement
-) {
-  let overlay = document.getElementById("text-track-overlay") as HTMLDivElement;
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.id = "text-track-overlay";
-    container.appendChild(overlay);
-  }
-  // Find the first showing text track
-  let track: TextTrack | undefined;
-  for (let i = 0; i < video.textTracks.length; i++) {
-    if (video.textTracks[i].mode === "showing") {
-      track = video.textTracks[i];
-      break;
-    }
-  }
-  if (!track) return;
-  function updateOverlay() {
-    const active = track!.activeCues;
-    if (active && active.length > 0) {
-      overlay.innerHTML = Array.from(active)
-        .map((cue: VTTCue | TextTrackCue) => (cue as VTTCue).text)
-        .join("<br>");
-      overlay.style.display = "block";
-    } else {
-      overlay.innerHTML = "";
-      overlay.style.display = "none";
-    }
-  }
-  track.addEventListener("cuechange", updateOverlay);
-  // Initial update
-  updateOverlay();
-}
-
 const init = () => {
   const wrapper = document.createElement("div");
-  wrapper.classList.add(
-    "video-wrapper"
-    // scanlinesClass,
-    // "crt-curved",
-  );
+  wrapper.classList.add("video-wrapper");
 
   const video = document.createElement("video");
-  video.classList.add("grayscale", scanlinesClass);
   video.classList.add("hidden-video");
 
   video.muted = true;
@@ -382,7 +299,6 @@ const init = () => {
   wrapper.appendChild(video);
   // Global ref to video elem/wrapper
   _video = video;
-  _videoWrapper = wrapper;
   window._video = video;
 
   const debugOverlay = createDebugOverlay();
@@ -394,7 +310,7 @@ const init = () => {
     enableWebcamMode();
   } else {
     hls = new Hls();
-    hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
+    hls.loadSource(getHlsProxyUrl(streams[currentChannelIndex].streamUrl));
     hls.attachMedia(video);
 
     hls.on(Hls.Events.MANIFEST_PARSED, function () {
@@ -462,20 +378,6 @@ const addEventListeners = (
     ".toggle-grayscale"
   ) as HTMLButtonElement;
   toggleGrayscaleButton.addEventListener("click", () => toggleGrayscale());
-  videoEl?.style.setProperty("--grayscaleLevel", "0");
-
-  // Scanline height update on video resize
-  const updateScanlineHeight = () => {
-    if (_videoWrapper.classList.contains(scanlinesClass)) {
-      const scanlineHeight = _video.clientHeight / 486; // 486 is the height of NTSC video
-      _videoWrapper.style.setProperty(
-        "--scanlineHeight",
-        scanlineHeight + "px"
-      );
-    }
-  };
-  const resizeObserver = new ResizeObserver(updateScanlineHeight);
-  resizeObserver.observe(_video);
 };
 
 init();

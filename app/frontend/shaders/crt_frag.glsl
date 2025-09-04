@@ -45,7 +45,7 @@ vec2 horizontalHoldDistortion(vec2 uv, float time) {
 }
 
 // Vertical hold distortion
-vec2 verticalHoldDistortion(vec2 uv, float time, vec4 fragColor) {
+vec2 verticalHoldDistortion(vec2 uv, float time) {
 
   if (verticalHold < 0.1) return uv;
 
@@ -59,7 +59,6 @@ vec2 verticalHoldDistortion(vec2 uv, float time, vec4 fragColor) {
   uv.y += 0.1 * time * verticalHold / 2.0;
   uv.y = fract(uv.y);
     if (uv.y < visibleStart || uv.y > visibleEnd) {
-      fragColor = vec4(0.0, 0.0, 0.0, 1.0);
       uv.x = DRAW_BLACK; // signal to main to blank color
   }
 
@@ -81,7 +80,7 @@ void main() {
   // Apply horizontal hold distortion
   uv = horizontalHoldDistortion(uv, time);
   // Apply vertical hold distortion
-  uv = verticalHoldDistortion(uv, time, gl_FragColor);
+  uv = verticalHoldDistortion(uv, time);
 
   // If verticalHoldDistortion signaled black bar, blank color
     if (uv.x == DRAW_BLACK) {

@@ -104,37 +104,41 @@ export function setUpCRTScene(
 }
 
 // Export function to control grayscale from outside
-export function setGrayscale(enabled: boolean) {
+export function setGrayscaleShader(enabled: boolean) {
   if (grayscaleUniform) {
     grayscaleUniform.value = enabled ? 1.0 : 0.0;
   }
 }
 
 // Export function to control horizontal hold from outside
-export function setHorizontalHold(holdValue: number) {
+export function setHorizontalHoldShader(holdValue: number) {
   console.log("Setting horizontal hold to:", holdValue);
   if (horizontalHoldUniform) {
     horizontalHoldUniform.value = holdValue;
   }
 }
 
-export function setVerticalHold(holdValue: number) {
-  console.log("Setting vertical hold to:", holdValue);
-  if (verticalHoldUniform) {
-    verticalHoldUniform.value = holdValue;
-  }
+export function setVerticalHoldShader(target: number) {
+  targetVerticalHoldOffset = target;
+  verticalHoldEnabled = true;
 }
 
-export function setExtremeHorizontalMeltdown(enabled: boolean) {
+export function clearVerticalHold() {
+  verticalHoldEnabled = false;
+  verticalHoldOffset = 0;
+  targetVerticalHoldOffset = 0;
+}
+
+export function setExtremeHorizontalMeltdownShader(enabled: boolean) {
   extremeHorizontalMeltdownUniform.value = enabled;
 }
 
-export function setBarrelDistortion(enabled: boolean) {
+export function setBarrelDistortionShader(enabled: boolean) {
   console.log("Setting barrel distortion to:", enabled);
   barrelDistortionUniform.value = enabled;
 }
 
-export function setScanlines(enabled: boolean) {
+export function setScanlinesShader(enabled: boolean) {
   console.log("Setting scanlines to:", enabled);
   scanlinesUniform.value = enabled;
 }

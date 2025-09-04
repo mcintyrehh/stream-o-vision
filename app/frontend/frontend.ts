@@ -1,13 +1,14 @@
 import Hls from "hls.js";
 import { streams, type Stream } from "./streams";
+import { createDebugOverlay } from "./debug-overlay";
 import {
   setUpCRTScene,
-  setGrayscale,
-  setHorizontalHold as setHorizontalHoldShader,
-  setVerticalHold as setVerticalHoldShader,
-  setExtremeHorizontalMeltdown as setExtremeHorizontalMeltdownShader,
-  setBarrelDistortion as setBarrelDistortionShader,
-  setScanlines as setScanlinesShader,
+  setGrayscaleShader,
+  setHorizontalHoldShader,
+  setVerticalHoldShader,
+  setExtremeHorizontalMeltdownShader,
+  setBarrelDistortionShader,
+  setScanlinesShader,
   clearCRTRenderer,
   resumeCRTRenderer,
 } from "./crt-threejs";
@@ -166,7 +167,7 @@ const toggleGrayscale = () => {
 
   if (THREE_JS_ENABLED) {
     // Use Three.js shader for grayscale effect
-    setGrayscale(grayscaleEnabled);
+    setGrayscaleShader(grayscaleEnabled);
   } else {
     // Use CSS filter for grayscale effect
     _video?.style.setProperty("--grayscaleLevel", grayscaleEnabled ? "1" : "0");
@@ -200,8 +201,7 @@ const toggleScanlines = () => {
 };
 
 const setHorizontalHold = (direction: "up" | "down") => {
-  const holdDiff =
-    direction === "up" ? HOLD_INCREMENT : -HOLD_INCREMENT;
+  const holdDiff = direction === "up" ? HOLD_INCREMENT : -HOLD_INCREMENT;
   horizontalHoldLevel = horizontalHoldLevel + holdDiff;
 
   // Use Three.js shader for horizontal hold effect
@@ -221,8 +221,7 @@ const setHorizontalHold = (direction: "up" | "down") => {
 };
 
 const setVerticalHold = (direction: "up" | "down") => {
-  const holdDiff =
-    direction === "up" ? HOLD_INCREMENT : -HOLD_INCREMENT;
+  const holdDiff = direction === "up" ? HOLD_INCREMENT : -HOLD_INCREMENT;
   verticalHoldLevel = verticalHoldLevel + holdDiff;
 
   // Use Three.js shader for vertical hold effect
@@ -345,10 +344,6 @@ function setUpTextTrackOverlay(
 }
 
 const init = () => {
-  // Remove any existing video-wrapper to prevent duplicates
-  const existingWrapper = document.querySelector(".video-wrapper");
-  if (existingWrapper) existingWrapper.remove();
-
   const wrapper = document.createElement("div");
   wrapper.classList.add(
     "video-wrapper"
@@ -368,46 +363,9 @@ const init = () => {
   _videoWrapper = wrapper;
   window._video = video;
 
-  // Add debug overlay with channel/volume/mute, and feature controls
-  const overlay = document.createElement("div");
-  overlay.className = "video-overlay";
-  overlay.innerHTML = `
-    <div class="debug-controls">
-      <div style="display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
-        <span>
-        <button class="channel-down">Channel Down</button>
-          <button class="channel-up">Channel Up</button>
-        </span>
-        <span>
-          <button class="volume-down">Volume Down</button>
-          <button class="volume-up">Volume Up</button>
-        </span>
-        <button class="toggle-mute">Toggle Mute</button>
-      </div>
-      <div style="margin-top:1rem; display:flex; flex-direction:column; gap:0.5rem; align-items:center;">
-        <button class="toggle-grayscale">Toggle Grayscale</button>
-        <button class="toggle-scanlines">Toggle Scanlines</button>
-        <span>
-          <button class="horizontal-hold-down">Horizontal Hold -</button>
-          <button class="horizontal-hold-up">Horizontal Hold +</button>
-        </span>
-        <span>
-          <button class="vertical-hold-down">Vertical Hold -</button>
-          <button class="vertical-hold-up">Vertical Hold +</button>
-        </span>
-        <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
-        <button class="percussive-maintenance">Percussive Maintenance</button>
-        <button class="barrel-distortion">Barrel Distortion</button>
-      </div>
-    </div>
-  `;
-  // Place overlay after the video element if it exists, otherwise append
-  if (wrapper.children.length > 0) {
-    wrapper.insertBefore(overlay, wrapper.children[1] || null);
-  } else {
-    wrapper.appendChild(overlay);
-  }
+  const debugOverlay = createDebugOverlay();
 
+  wrapper.appendChild(debugOverlay);
   document.body.appendChild(wrapper);
 
   if (!Hls.isSupported())
@@ -421,7 +379,7 @@ const init = () => {
   });
 
   addTextTrackToVideoElement(video);
-  addEventListeners(video, overlay);
+  addEventListeners(video, debugOverlay);
   if (THREE_JS_ENABLED) {
     setUpCRTScene(video, wrapper);
     setUpTextTrackOverlay(video, wrapper);

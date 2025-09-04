@@ -12,10 +12,27 @@ let scanlinesUniform: { value: boolean } = { value: false };
 let crtRenderer: THREE.WebGLRenderer | null = null;
 let shouldRender = true;
 
+type ShaderInits = {
+  grayscale: boolean;
+  horizontalHold: number;
+  verticalHold: number;
+  extremeHorizontalMeltdown: boolean;
+  barrelDistortion: boolean;
+  scanlines: boolean;
+};
+
 // Usage: Call setUpCRTScene(videoElement) after your video is loaded and playing
 export function setUpCRTScene(
   video: HTMLVideoElement,
-  container: HTMLElement = document.body
+  container: HTMLElement = document.body,
+  {
+    grayscale = false,
+    horizontalHold = 0.0,
+    verticalHold = 0.0,
+    extremeHorizontalMeltdown = false,
+    barrelDistortion = false,
+    scanlines = false,
+  }: Partial<ShaderInits> = {}
 ) {
   // Create renderer
   const renderer = new THREE.WebGLRenderer({
@@ -57,18 +74,19 @@ export function setUpCRTScene(
         value: new THREE.Vector2(window.innerWidth, window.innerHeight),
       },
       time: { value: 0 },
-      grayscale: { value: 0.0 },
-      horizontalHold: { value: 0.0 },
-      verticalHold: { value: 0.0 },
-      extremeHorizontalMeltdown: { value: false },
-      barrelDistortion: { value: false },
-      scanlines: { value: false },
+      grayscale: { value: grayscale },
+      horizontalHold: { value: horizontalHold },
+      verticalHold: { value: verticalHold },
+      extremeHorizontalMeltdown: { value: extremeHorizontalMeltdown },
+      barrelDistortion: { value: barrelDistortion },
+      scanlines: { value: scanlines },
     },
     vertexShader,
     fragmentShader,
   });
 
   const mesh = new THREE.Mesh(geometry, material);
+  mesh.scale.x = -1; // Flip the mesh horizontally
   scene.add(mesh);
 
   // Store reference to uniforms for external control

@@ -43,9 +43,9 @@ let grayscaleEnabled = false;
 let horizontalHoldLevel = 0;
 let verticalHoldLevel = 0;
 let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
-let barrelDistortionEnabled = false; // For barrel distortion effect
-let scanlinesEnabled = false;
-let webcamModeEnabled = false;
+let barrelDistortionEnabled = true; // For barrel distortion effect
+let scanlinesEnabled = true;
+let webcamModeEnabled = true;
 
 // === WebSocket Handling ===
 const socket = new WebSocket("ws://localhost:3000");
@@ -109,23 +109,29 @@ const setChannel = async (channel: number) => {
 
 const toggleWebcamMode = () => {
   webcamModeEnabled = !webcamModeEnabled;
+  console.log("Webcam mode enabled:", webcamModeEnabled);
   if (!webcamModeEnabled) {
-    setChannel(0);
+    _video.srcObject = null;
+    initHls(_video);
     return;
   }
   enableWebcamMode();
 };
 
 const enableWebcamMode = () => {
-  console.log("Webcam mode toggled:", webcamModeEnabled);
   // update the video element source to use the webcam
   const constraints = {
     video: { width: 1280, height: 720, facingMode: "user" },
   };
   const userMedia = navigator.mediaDevices.getUserMedia(constraints);
-  userMedia.then((stream) => {
-    _video.srcObject = stream;
-  });
+  userMedia
+    .then((stream) => {
+      _video.srcObject = stream;
+      _video.play(); // Ensure the video starts playing
+    })
+    .catch((error) => {
+      console.error("Error accessing webcam:", error);
+    });
 };
 
 const setVolume = (volume: VolumeDirection) => {
@@ -309,19 +315,29 @@ const init = () => {
   if (webcamModeEnabled) {
     enableWebcamMode();
   } else {
-    hls = new Hls();
-    hls.loadSource(getHlsProxyUrl(streams[currentChannelIndex].streamUrl));
-    hls.attachMedia(video);
+    initHls(video);
+  }
 
-    hls.on(Hls.Events.MANIFEST_PARSED, function () {
-      video.play();
-    });
+  const shaderInits = {
+    scanlines: scanlinesEnabled,
+    barrelDistortion: barrelDistortionEnabled,
+    grayscale: grayscaleEnabled
   }
 
   addTextTrackToVideoElement(video);
   addEventListeners(video, debugOverlay);
-  setUpCRTScene(video, wrapper);
+  setUpCRTScene(video, wrapper, shaderInits);
   setUpTextTrackOverlay(video, wrapper);
+};
+
+const initHls = (video) => {
+  hls = new Hls();
+  hls.loadSource(getHlsProxyUrl(streams[currentChannelIndex].streamUrl));
+  hls.attachMedia(video);
+
+  hls.on(Hls.Events.MANIFEST_PARSED, function () {
+    video.play();
+  });
 };
 
 // === Event Listeners ===

@@ -31,6 +31,7 @@ export const createDebugOverlay = (): HTMLDivElement => {
         <button class="extreme-horizontal-meltdown">Extreme Horizontal Meltdown</button>
         <button class="percussive-maintenance">Percussive Maintenance</button>
         <button class="barrel-distortion">Barrel Distortion</button>
+        <button class="webcam-mode">Toggle Webcam Mode</button>
       </div>
     </div>
   `;

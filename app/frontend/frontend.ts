@@ -21,13 +21,13 @@ declare global {
 }
 
 // === Constants and State ===
-type VolumeDirection = "up" | "down";
-const scanlinesClass = "scanlines";
-// const scanlinesClass = "crt";
+const VOLUME_INCREMENT = 5;
+const HOLD_INCREMENT = 2;
+// seconds to delay between stream changes for maximum static gif effect
+const STREAM_CHANGE_DELAY_SECONDS = 1;
 
 let hls: Hls;
 let _video: HTMLVideoElement;
-let _videoWrapper: HTMLDivElement;
 let _textTrack: TextTrack;
 let currentChannelIndex = 2;
 
@@ -38,6 +38,7 @@ let verticalHoldLevel = 0;
 let extremeHorizontalMeltdown = false; // For horizontal meltdown effect
 let barrelDistortionEnabled = false; // For barrel distortion effect
 let scanlinesEnabled = false;
+let webcamModeEnabled = true;
 
 const VOLUME_INCREMENT = 5;
 const HOLD_INCREMENT = 2;
@@ -129,6 +130,27 @@ const setChannel = async (channel: number) => {
     addTextTrackToVideoElement(_video);
     // Resume video playback
     _video.play();
+  });
+};
+
+const toggleWebcamMode = () => {
+  webcamModeEnabled = !webcamModeEnabled;
+  if (!webcamModeEnabled) {
+    setChannel(0);
+    return;
+  }
+  enableWebcamMode();
+};
+
+const enableWebcamMode = () => {
+  console.log("Webcam mode toggled:", webcamModeEnabled);
+  // update the video element source to use the webcam
+  const constraints = {
+    video: { width: 1280, height: 720, facingMode: "user" },
+  };
+  const userMedia = navigator.mediaDevices.getUserMedia(constraints);
+  userMedia.then((stream) => {
+    _video.srcObject = stream;
   });
 };
 
@@ -353,7 +375,7 @@ const init = () => {
 
   const video = document.createElement("video");
   video.classList.add("grayscale", scanlinesClass);
-  THREE_JS_ENABLED && video.classList.add("hidden-video");
+  video.classList.add("hidden-video");
 
   video.muted = true;
 
@@ -368,22 +390,22 @@ const init = () => {
   wrapper.appendChild(debugOverlay);
   document.body.appendChild(wrapper);
 
-  if (!Hls.isSupported())
-    throw new Error("HLS is not supported in this browser.");
-  hls = new Hls();
-  hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
-  hls.attachMedia(video);
+  if (webcamModeEnabled) {
+    enableWebcamMode();
+  } else {
+    hls = new Hls();
+    hls.loadSource(proxyURLFromStreamIndex(currentChannelIndex));
+    hls.attachMedia(video);
 
-  hls.on(Hls.Events.MANIFEST_PARSED, function () {
-    video.play();
-  });
+    hls.on(Hls.Events.MANIFEST_PARSED, function () {
+      video.play();
+    });
+  }
 
   addTextTrackToVideoElement(video);
   addEventListeners(video, debugOverlay);
-  if (THREE_JS_ENABLED) {
-    setUpCRTScene(video, wrapper);
-    setUpTextTrackOverlay(video, wrapper);
-  }
+  setUpCRTScene(video, wrapper);
+  setUpTextTrackOverlay(video, wrapper);
 };
 
 // === Event Listeners ===
@@ -432,6 +454,9 @@ const addEventListeners = (
   overlay
     .querySelector(".barrel-distortion")
     ?.addEventListener("click", () => toggleBarrelDistortion());
+  overlay
+    .querySelector(".webcam-mode")
+    ?.addEventListener("click", () => toggleWebcamMode());
 
   const toggleGrayscaleButton = overlay.querySelector(
     ".toggle-grayscale"

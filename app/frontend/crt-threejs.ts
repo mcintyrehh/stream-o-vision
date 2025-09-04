@@ -119,14 +119,10 @@ export function setHorizontalHoldShader(holdValue: number) {
 }
 
 export function setVerticalHoldShader(target: number) {
-  targetVerticalHoldOffset = target;
-  verticalHoldEnabled = true;
-}
-
-export function clearVerticalHold() {
-  verticalHoldEnabled = false;
-  verticalHoldOffset = 0;
-  targetVerticalHoldOffset = 0;
+  console.log("Setting vertical hold to:", target);
+  if (verticalHoldUniform) {
+    verticalHoldUniform.value = target;
+  }
 }
 
 export function setExtremeHorizontalMeltdownShader(enabled: boolean) {

@@ -4,8 +4,9 @@ import analogio
 # ex: https://www.sparkfun.com/rotary-switch-10-position.html
 
 class RotaryNPositionSwitch():
-    def __init__(self, pin, num_positions=10):
+    def __init__(self, pin, name, num_positions=10):
         self.rotary_switch = analogio.AnalogIn(pin)
+        self.name = name
         self.num_positions = num_positions
         self.cached_channel = self.channel
         print("RotarySwitch reference_voltage: ", self.rotary_switch.reference_voltage)
@@ -17,10 +18,6 @@ class RotaryNPositionSwitch():
         return int((self.rotary_switch.value / 65535) * self.num_positions)
     
     @property
-    def value(self):
-        return self.rotary_switch._value
-    
-    @property
     def channel(self):
         return self.get_channel()
     
@@ -28,4 +25,4 @@ class RotaryNPositionSwitch():
         new_channel = self.channel
         if new_channel is not self.cached_channel:
             self.cached_channel = new_channel
-            print("sensor:channel:{}".format(new_channel))
+            print("sensor:{}:{}".format(self.name, new_channel))

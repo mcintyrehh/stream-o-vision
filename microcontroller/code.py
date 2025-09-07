@@ -8,7 +8,7 @@ from on_off_switch import OnOffSwitch
 
 # switch_pin = board.D13
 rotary_switch_pin = board.A1
-volume_pot_pin = board.A2 # save for future use, will switch to log potentiometer
+bumpinator_pin = board.A2 # percussive maintenance
 
 vol_button_pin = board.D11
 vol_enc_b_pin = board.D10
@@ -22,7 +22,7 @@ barrel_distortion_switch_pin = board.D12
 horizontal_hold_switch_pin = board.D13 # this should be a pot or something, just testing now
 
 # Channel Knob (10 position)
-rotary_switch = RotaryNPositionSwitch(rotary_switch_pin, 10)
+rotary_switch = RotaryNPositionSwitch(rotary_switch_pin, "channel", 10)
 volume_controller = VolumeController(vol_button_pin, vol_enc_a_pin, vol_enc_b_pin)
 
 # "Feature" Switches 
@@ -30,6 +30,9 @@ grayscale_switch = OnOffSwitch(grayscale_switch_pin, "grayscale")
 scanline_switch = OnOffSwitch(scanline_switch_pin, "scanlines")
 barrel_distortion_switch = OnOffSwitch(barrel_distortion_switch_pin, "barrel_distortion")
 horizontal_hold_switch = OnOffSwitch(horizontal_hold_switch_pin, "horizontal_hold")
+
+# Bumpinator Switch
+bumpinator_switch = RotaryNPositionSwitch(bumpinator_pin, "bumpinator", 1)
 
 # Gets a % voltage from an analog pin
 def get_voltage(pin):
@@ -45,6 +48,9 @@ while True:
 
     # rotary encoder
     rotary_switch.read_channel()
+    
+    # bumpinator
+    bumpinator_switch.read_channel()
     
     # b&w switch
     grayscale_switch.read_switch()

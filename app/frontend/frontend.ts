@@ -400,6 +400,30 @@ const addEventListeners = (
     ".toggle-grayscale"
   ) as HTMLButtonElement;
   toggleGrayscaleButton.addEventListener("click", () => toggleGrayscale());
+
+  // Add keyboard shortcuts
+  document.addEventListener("keydown", (event) => {
+    switch (event.key.toLowerCase()) {
+      case "b":
+        toggleBarrelDistortion();
+        break;
+      case "s":
+        toggleScanlines();
+        break;
+      case "h":
+        setHorizontalHold("up");
+        break;
+      case "v":
+        setVerticalHold("up");
+        break;
+      case "e":
+        setExtremeHorizontalMeltdown(!extremeHorizontalMeltdown);
+        break;
+      case "p":
+        triggerPercussiveMaintenance();
+        break;
+    }
+  });
 };
 
 init();

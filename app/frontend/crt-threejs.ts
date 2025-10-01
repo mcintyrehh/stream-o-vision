@@ -86,7 +86,9 @@ export function setUpCRTScene(
   });
 
   const mesh = new THREE.Mesh(geometry, material);
-  mesh.scale.x = -1; // Flip the mesh horizontally
+  // @todo: only do this if in "webcam mirror mode"
+  // needs to be mirrored to ....look like a mirror, but it makes text backwards 
+  //   mesh.scale.x = -1; // Flip the mesh horizontally
   scene.add(mesh);
 
   // Store reference to uniforms for external control

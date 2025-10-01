@@ -50,6 +50,9 @@ body {
 /* .threejs-canvas canvas @todo: get this working*/
 canvas {
   background-image: url('/tv-static.gif');
+  position: relative;
+  left: -1.4vw; /* shift left by 1.4% of viewport width because my tv picture isn't centered */
+  transform: scale(1.05); /* zoom in by 5% because */
 }
 
 .video-overlay {

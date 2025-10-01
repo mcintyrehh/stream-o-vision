@@ -7,6 +7,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  position: relative;
 }
 
 .grayscale {
@@ -22,6 +23,22 @@ body {
   justify-content: center;
   background: #000;
   position: relative;
+  z-index: 1; /* Behind the TV overlay */
+}
+
+/* TV overlay that sits on top with transparent hole */
+.tv-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url('/static/tv_slide.png');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none; /* Allow clicks to pass through */
+  z-index: 10; /* On top of video */
 }
 .video-wrapper video {
   width: 100%;

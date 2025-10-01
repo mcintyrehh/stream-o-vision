@@ -303,6 +303,11 @@ const init = () => {
   video.muted = true;
 
   wrapper.appendChild(video);
+  
+  // Create TV overlay with transparent hole
+  const tvOverlay = document.createElement("div");
+  tvOverlay.classList.add("tv-overlay");
+  
   // Global ref to video elem/wrapper
   _video = video;
   window._video = video;
@@ -311,6 +316,7 @@ const init = () => {
 
   wrapper.appendChild(debugOverlay);
   document.body.appendChild(wrapper);
+  document.body.appendChild(tvOverlay); // Add TV overlay on top
 
   if (webcamModeEnabled) {
     enableWebcamMode();

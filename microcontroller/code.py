@@ -5,25 +5,29 @@ from rotary_switch import RotaryNPositionSwitch
 from volume_controller import VolumeController
 from on_off_switch import OnOffSwitch
 
+rotary_switch_pin = board.A0 # channel select
+volume_pot_pin = board.A1 # volume control
+hold_pot_pin = board.A2 # hold adjustment
+bumpinator_pin = board.A3 # percussive maintenance
 
-# switch_pin = board.D13
-rotary_switch_pin = board.A1
-bumpinator_pin = board.A2 # percussive maintenance
-
-vol_button_pin = board.D11
-vol_enc_b_pin = board.D10
-vol_enc_a_pin = board.D9
+###
+# Unused, volume used to be a digital encoder but now it is a log pot
+# Smell-O-Vision has yet to make its debut
+###
+# vol_button_pin = board.D11
+# vol_enc_b_pin = board.D10
+# vol_enc_a_pin = board.D9
 #smell_o_vision_fan_tach_pin = board.D6
 #smell_o_vision_fan_rpm_pin = board.D5
 
-grayscale_switch_pin = board.SDA
-scanline_switch_pin = board.SCL
-barrel_distortion_switch_pin = board.D12
-horizontal_hold_switch_pin = board.D13 # this should be a pot or something, just testing now
+barrel_distortion_switch_pin = board.D13
+grayscale_switch_pin = board.D12
+scanline_switch_pin = board.D11
+horizontal_hold_switch_pin = board.D10 # this should be a pot or something, just testing now
 
 # Channel Knob (10 position)
 rotary_switch = RotaryNPositionSwitch(rotary_switch_pin, "channel", 10)
-volume_controller = VolumeController(vol_button_pin, vol_enc_a_pin, vol_enc_b_pin)
+# volume_controller = VolumeController(vol_button_pin, vol_enc_a_pin, vol_enc_b_pin)
 
 # "Feature" Switches 
 grayscale_switch = OnOffSwitch(grayscale_switch_pin, "grayscale")
@@ -32,23 +36,17 @@ barrel_distortion_switch = OnOffSwitch(barrel_distortion_switch_pin, "barrel_dis
 horizontal_hold_switch = OnOffSwitch(horizontal_hold_switch_pin, "horizontal_hold")
 
 # Bumpinator Switch
-bumpinator_switch = RotaryNPositionSwitch(bumpinator_pin, "bumpinator", 1)
-
-# Gets a % voltage from an analog pin
-def get_voltage(pin):
-    ref_voltage = pin.reference_voltage
-    voltage = (pin.value * ref_voltage) / 65535
-    return round(voltage / ref_voltage, 2)
+bumpinator_switch = RotaryNPositionSwitch(bumpinator_pin, "bumpinator", 10)
 
 while True:
     # volume encoder
-    volume_controller.read_volume()
+    # volume_controller.read_volume()
     # mute button
-    volume_controller.read_mute()   
+    # volume_controller.read_mute()   
 
     # rotary encoder
     rotary_switch.read_channel()
-    
+
     # bumpinator
     bumpinator_switch.read_channel()
     
@@ -64,5 +62,5 @@ while True:
     # horizontal hold switch (should be pot or something)
     horizontal_hold_switch.read_switch()
 
-    time.sleep(0.1)
+    # no sleep, bumpinator trigger is super temporary so we need this to be responsive
     pass

@@ -77,6 +77,9 @@ const handleWSMessage = (data: string) => {
     case "barrel_distortion":
       toggleBarrelDistortion();
       break;
+    case "bumpinator":
+      triggerPercussiveMaintenance();
+      break;
     default:
       return;
   }
@@ -303,11 +306,11 @@ const init = () => {
   video.muted = true;
 
   wrapper.appendChild(video);
-  
+
   // Create TV overlay with transparent hole
   const tvOverlay = document.createElement("div");
   tvOverlay.classList.add("tv-overlay");
-  
+
   // Global ref to video elem/wrapper
   _video = video;
   window._video = video;
@@ -327,8 +330,8 @@ const init = () => {
   const shaderInits = {
     scanlines: scanlinesEnabled,
     barrelDistortion: barrelDistortionEnabled,
-    grayscale: grayscaleEnabled
-  }
+    grayscale: grayscaleEnabled,
+  };
 
   addTextTrackToVideoElement(video);
   addEventListeners(video, debugOverlay);
@@ -404,6 +407,9 @@ const addEventListeners = (
   // Add keyboard shortcuts
   document.addEventListener("keydown", (event) => {
     switch (event.key.toLowerCase()) {
+      case "g":
+        toggleGrayscale();
+        break;
       case "b":
         toggleBarrelDistortion();
         break;
@@ -421,6 +427,18 @@ const addEventListeners = (
         break;
       case "p":
         triggerPercussiveMaintenance();
+        break;
+      case "w":
+        toggleWebcamMode();
+        break;
+      case "arrowup":
+        onChannelChange("up");
+        break;
+      case "arrowdown":
+        onChannelChange("down");
+        break;
+      case "m":
+        setMuted();
         break;
     }
   });

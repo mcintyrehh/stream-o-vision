@@ -16,7 +16,7 @@ vec2 applyBarrelDistortion(vec2 coord) {
   // squared distance from center point
   float dist = dot(center_coord, center_coord);
   // apply distortion relative to distance
-  center_coord *= 1.0 + 0.25 * dist;
+  center_coord *= 1.0 + 0.40 * dist;
   // convert back to UV space
   return center_coord + 0.5;
 }

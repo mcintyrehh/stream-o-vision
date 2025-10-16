@@ -23,24 +23,15 @@ vec2 applyBarrelDistortion(vec2 coord) {
 
 // Horizontal hold distortion
 vec2 horizontalHoldDistortion(vec2 uv, float time) {
-  
   if (horizontalHold < 0.1) return uv;
 
-  // Create rolling effect - lines shift at different rates
+  // Rolling effect with diagonal shift
   float rollSpeed = 0.5 + horizontalHold * 2.0;
-  
-  // Offset horizontal roll by vertical position
-  // This creates a more distorted rolling effect with a diagonal shift
-  float roll1 = uv.y + time * rollSpeed;
-
   float vertRollModifier = extremeHorizontalMeltdown ? 2.0 : 0.01;
-  float totalRoll = roll1 * vertRollModifier;
 
-  uv.x += totalRoll;
-  
-  // Wrap horizontal coordinates
-  uv.x = fract(uv.x);
-  
+  uv.x += (uv.y + time * rollSpeed) * vertRollModifier;
+  uv.x = fract(uv.x);	// Wrap horizontal coordinates
+
   return uv;
 }
 
@@ -99,7 +90,8 @@ void main() {
 
   // Scanlines
   if (scanlines) {
-    float scanline = 0.85 + 0.15 * sin(3.14159 * vUv.y * resolution.y * 0.5 + time * 2.0);
+	float scanlineNumber = vUv.y * 486.0;
+    float scanline = 0.85 + 0.15 * sin(3.14159 * scanlineNumber);
     color *= scanline;
   }
 

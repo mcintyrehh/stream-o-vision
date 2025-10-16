@@ -339,7 +339,7 @@ const init = () => {
   setUpTextTrackOverlay(video, wrapper);
 };
 
-const initHls = (video) => {
+const initHls = (video: HTMLVideoElement) => {
   hls = new Hls();
   hls.loadSource(getHlsProxyUrl(streams[currentChannelIndex].streamUrl));
   hls.attachMedia(video);
